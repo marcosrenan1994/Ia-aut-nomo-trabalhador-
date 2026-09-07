@@ -1,0 +1,6 @@
+{
+  "name": "NEXUS-OS V8 & Gemini Robotics ER-2",
+  "description": "Plataforma robótica Gemini Robotics ER-2 com Pedestre Formal Delivery 24h & Vaga SINE Exclusiva em Santa Terezinha de Itaipu - PR, Malha Planetária de Indústrias Físicas, Visor da Imaginação e Nexus-OS.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
