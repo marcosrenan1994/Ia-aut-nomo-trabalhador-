@@ -33,6 +33,7 @@ import { PedestreFormalDeliverySTI } from './components/PedestreFormalDeliveryST
 import { ContainerWithMostWaterSorter3D } from './components/ContainerWithMostWaterSorter3D';
 import { AutonomousAgentOrchestratorHub } from './components/AutonomousAgentOrchestratorHub';
 import { QuantumAutonomousMeetingRoom } from './components/QuantumAutonomousMeetingRoom';
+import { WiseQuantumBank } from './components/WiseQuantumBank';
 import { 
   Bot, 
   Cpu, 
@@ -57,7 +58,8 @@ import {
   Footprints,
   UserCheck,
   Droplet,
-  Users
+  Users,
+  Building2
 } from 'lucide-react';
 
 const INITIAL_JOINTS: JointState[] = [
@@ -164,15 +166,15 @@ export default function App() {
   const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isTestingTool, setIsTestingTool] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'pedestre_formal_delivery' | 'global_physical_industry' | 'sandbox_imagination' | 'workstation_6dof' | 'nexus_os' | 'wisdom' | 'autonomous' | 'orchestrator' | 'toolkit' | 'memory' | 'teleop' | 'water_sorter' | 'agent_orchestrator' | 'quantum_meeting_room'>('wisdom');
+  const [activeTab, setActiveTab] = useState<'wise_quantum_bank' | 'pedestre_formal_delivery' | 'global_physical_industry' | 'sandbox_imagination' | 'workstation_6dof' | 'nexus_os' | 'wisdom' | 'autonomous' | 'orchestrator' | 'toolkit' | 'memory' | 'teleop' | 'water_sorter' | 'agent_orchestrator' | 'quantum_meeting_room'>('wise_quantum_bank');
   const [isQuantumAutonomousActive, setIsQuantumAutonomousActive] = useState<boolean>(false);
 
   // Quantum Autonomous Speed Loop: Automatically clicks and triggers all features at quantum speed
   useEffect(() => {
     let quantumTimer: NodeJS.Timeout;
     if (isQuantumAutonomousActive) {
-      const tabsList: ('pedestre_formal_delivery' | 'global_physical_industry' | 'sandbox_imagination' | 'workstation_6dof' | 'nexus_os' | 'wisdom' | 'autonomous' | 'orchestrator' | 'toolkit' | 'memory' | 'teleop' | 'water_sorter' | 'agent_orchestrator' | 'quantum_meeting_room')[] = [
-        'pedestre_formal_delivery', 'global_physical_industry', 'sandbox_imagination', 'workstation_6dof', 'nexus_os', 'wisdom', 'autonomous', 'orchestrator', 'toolkit', 'memory', 'teleop', 'water_sorter', 'agent_orchestrator', 'quantum_meeting_room'
+      const tabsList: ('wise_quantum_bank' | 'pedestre_formal_delivery' | 'global_physical_industry' | 'sandbox_imagination' | 'workstation_6dof' | 'nexus_os' | 'wisdom' | 'autonomous' | 'orchestrator' | 'toolkit' | 'memory' | 'teleop' | 'water_sorter' | 'agent_orchestrator' | 'quantum_meeting_room')[] = [
+        'wise_quantum_bank', 'pedestre_formal_delivery', 'global_physical_industry', 'sandbox_imagination', 'workstation_6dof', 'nexus_os', 'wisdom', 'autonomous', 'orchestrator', 'toolkit', 'memory', 'teleop', 'water_sorter', 'agent_orchestrator', 'quantum_meeting_room'
       ];
 
       quantumTimer = setInterval(() => {
@@ -785,6 +787,33 @@ export default function App() {
         {/* Tab Navigation Controls */}
         <div className="space-y-2 border-b border-slate-800 pb-4">
           <button
+            id="tab-wise-quantum-bank-btn"
+            onClick={() => setActiveTab('wise_quantum_bank')}
+            className={`w-full text-left flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all ${
+              activeTab === 'wise_quantum_bank'
+                ? 'bg-gradient-to-r from-emerald-600 via-[#163300] to-emerald-950 text-white shadow-xl shadow-emerald-500/20 ring-2 ring-[#9fe870] font-black'
+                : 'bg-gradient-to-r from-slate-900 via-[#07130b] to-slate-900 hover:border-emerald-500/60 text-[#9fe870] border border-emerald-500/40 shadow-lg'
+            }`}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded-xl bg-[#9fe870] flex items-center justify-center text-slate-950 font-black shrink-0 shadow-md">
+                <Building2 className="w-4 h-4" />
+              </div>
+              <div className="truncate">
+                <span className="font-black text-sm tracking-wide text-white block">
+                  WISE QUANTUM BANK (TODAS AS MOEDAS)
+                </span>
+                <span className="text-[11px] text-slate-300 block font-normal truncate">
+                  Funcionários Quantum Speed • Supermercado (Farinha a Espaçonaves) • Cofre R$ 1,00 Rendendo
+                </span>
+              </div>
+            </div>
+            <span className="px-2.5 py-1 rounded-full bg-[#9fe870]/20 text-[#9fe870] border border-[#9fe870]/40 text-[10px] font-mono font-bold whitespace-nowrap ml-2">
+              ⚡ R$ 1,00 RENDENDO
+            </span>
+          </button>
+
+          <button
             id="tab-pedestre-formal-delivery-btn"
             onClick={() => setActiveTab('pedestre_formal_delivery')}
             className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
@@ -979,6 +1008,9 @@ export default function App() {
 
         {/* Tab Viewport Contents */}
         <section>
+          {activeTab === 'wise_quantum_bank' && (
+            <WiseQuantumBank />
+          )}
           {activeTab === 'quantum_meeting_room' && (
             <QuantumAutonomousMeetingRoom
               onAddThought={(th) => setThoughts((prev) => [th, ...prev])}
