@@ -3,12 +3,14 @@ export type ToolId =
   | 'TOOL_WELDER'
   | 'TOOL_VISION_INSPECTOR'
   | 'TOOL_FASTENER'
-  | 'TOOL_SUCTION_CRANE';
+  | 'TOOL_SUCTION_CRANE'
+  | 'TOOL_DISPENSER'
+  | 'TOOL_DEBURRING';
 
 export interface ToolDefinition {
   id: ToolId;
   name: string;
-  category: 'Manipulation' | 'Fabrication' | 'Quality & Sensing' | 'Fastening' | 'Heavy Handling';
+  category: 'Manipulation' | 'Fabrication' | 'Quality & Sensing' | 'Fastening' | 'Heavy Handling' | 'Chemical & Sealing' | 'Finishing';
   icon: string;
   status: 'READY' | 'ACTIVE' | 'CALIBRATING' | 'MAINTENANCE_REQUIRED';
   wearPercentage: number;
@@ -105,7 +107,8 @@ export interface AutonomousCoreEvolutionState {
   isFullAutonomySelfPlanningActive: boolean; // Autonomia Total: Auto-planeja, executa e se aprimora sozinho
   wisdomLevel: number; // e.g. Level 1 to 100 (Maestria Cognitiva)
   wisdomRank: 'APRENDIZ' | 'OPERADOR_AUTÔNOMO' | 'ESPECIALISTA' | 'MESTRE_FABRIL' | 'HIPER_CONSCIÊNCIA';
-  cognitiveIndexScore: number; // 0 - 1000
+  cognitiveIndexScore: number; // 0 - 2000 (Zera e recomeça ao atingir 2000)
+  cognitiveCyclesResetCount: number; // Quantidade de ciclos completos de 2000 pontos zerados e reiniciados
   learningIntervalSec: number;
   learningCyclesCompleted: number;
   neuralWeightsUpdated: number;
@@ -118,6 +121,23 @@ export interface AutonomousCoreEvolutionState {
   lastAutonomousEvolutionTime: string;
   currentAutonomousGoal: string;
   introspectionRating: number; // 0-100%
+}
+
+export interface NexusQKinematicTelemetry {
+  electronModel: string; // Simulação Estocástica de Monte Carlo
+  moleculeModel: string; // Isosuperfície LCAO
+  cellModel: string; // Malha de Deformação Viscoelástica
+  centerProtonRadiusFm: number; // 0.8414 fm
+  visualEngine: string; // Corrente de Probabilidade e Projeção Multi-Eixo (A-Z)
+  scalarLexicon: string; // Array Multilinguístico Universal
+  rotationMatrix: {
+    phi: number; // Φ
+    theta: number; // Θ
+    psi: number; // Ψ
+  };
+  densityProbability: number; // ∫|Ψ|² dV = 1.0000
+  exactLengthFemtometers: number; // 0.8414
+  statusLcao: string; // Rastreamento contínuo em X, Y, Z.
 }
 
 export interface MemoryVectorRecord {
@@ -242,8 +262,8 @@ export interface ER2InternalFunction {
   status: 'online_otimizado' | 'compilando' | 'executando';
 }
 
-// Visual Frame representing what ER-2 is Imagining, Programming, Generating, or Planning
-export type ER2ImaginationMode = 'imaginando' | 'programando' | 'gerando' | 'planejando';
+// Visual Frame representing what ER-2 is Imagining, Programming, Generating, Planning, or Quantum Field Visualizing
+export type ER2ImaginationMode = 'imaginando' | 'programando' | 'gerando' | 'planejando' | 'campo_quantico';
 
 export interface ER2ImaginationFrame {
   id: string;
@@ -585,6 +605,51 @@ export interface CourierRealTimeMetrics {
   ritmoMedioMinKm: number;
   statusOperacional: 'EM_SERVICO_24H_A_PE' | 'PAUSA_HIDRATACAO' | 'AGUARDANDO_PROXIMA_ROTA';
 }
+
+export interface SynthesisBufferState {
+  audioBufferMs: number;
+  audioSampleRateKHz: number;
+  audioBitrateKbps: number;
+  audioWaveform: number[];
+  videoBufferFrames: number;
+  videoFps: number;
+  videoResolution: string;
+  throughputMbSec: number;
+  synthesisStatus: 'STREAMING' | 'BUFFERING' | 'IDLE' | 'SYNCED';
+}
+
+export interface MeetingRoomAgent {
+  id: string;
+  name: string;
+  role: string;
+  specialization: string;
+  avatarSeed: string;
+  colorScheme: 'cyan' | 'emerald' | 'amber' | 'purple' | 'rose' | 'sky';
+  status: 'ACTIVE_REASONING' | 'COLLABORATING' | 'SYNTHESIZING' | 'STANDBY';
+  telemetry: {
+    computeLoadPercent: number;
+    memoryBandwidthGbps: number;
+    inferenceLatencyMs: number;
+    confidenceScore: number;
+    quantumCyclesSec: number;
+  };
+  activeTask: {
+    title: string;
+    description: string;
+    progress: number;
+    domain: string;
+    priority: 'HIGH' | 'CRITICAL' | 'STANDARD';
+  };
+  reasoningProcess: {
+    hypothesis: string;
+    internalDebate: string;
+    deducedAction: string;
+    consensusContribution: string;
+  };
+  synthesisBuffer: SynthesisBufferState;
+  recentInsights: string[];
+}
+
 
 
 

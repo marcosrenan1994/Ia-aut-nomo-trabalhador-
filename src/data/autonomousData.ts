@@ -114,11 +114,12 @@ export const INITIAL_DISCOVERED_HEURISTICS: AutoDiscoveredHeuristic[] = [
 export const INITIAL_EVOLUTION_STATE: AutonomousCoreEvolutionState = {
   isAutonomousModeActive: true,
   isFullAutonomySelfPlanningActive: true,
-  wisdomLevel: 78,
-  wisdomRank: 'MESTRE_FABRIL',
-  cognitiveIndexScore: 892,
+  wisdomLevel: 100,
+  wisdomRank: 'HIPER_CONSCIÊNCIA',
+  cognitiveIndexScore: 1000,
+  cognitiveCyclesResetCount: 0,
   learningIntervalSec: 5,
-  learningCyclesCompleted: 186,
+  learningCyclesCompleted: 89136,
   neuralWeightsUpdated: 64280,
   overallAccuracyRating: 99.94,
   cumulativeSpeedGainPct: 24.8,
@@ -128,5 +129,5 @@ export const INITIAL_EVOLUTION_STATE: AutonomousCoreEvolutionState = {
   activeSynthesisFocus: 'Amortecimento Neuro-Cinemático & Decisões Soberanas em Fábrica',
   lastAutonomousEvolutionTime: 'Agora mesmo',
   currentAutonomousGoal: 'Auto-Otimização de Trajetórias Multi-Ferramenta Sem Singularidade',
-  introspectionRating: 96.5
+  introspectionRating: 99.8
 };

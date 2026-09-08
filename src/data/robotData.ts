@@ -67,10 +67,36 @@ export const INITIAL_TOOLS: ToolDefinition[] = [
     tempCelsius: 32.1,
     description: 'Ventosa multicanal de sucção rápida projetada para chapas metálicas, painéis e caixas pesadas.',
     activeFeatures: ['Vacuum seal telemetry', 'Emergency drop lock', 'Variable suction zones']
+  },
+  {
+    id: 'TOOL_DISPENSER',
+    name: 'Dispensador Micro-Métrico de Resinas & Adesivos',
+    category: 'Chemical & Sealing',
+    icon: 'Droplet',
+    status: 'READY',
+    wearPercentage: 3.2,
+    operatingHours: 85.0,
+    precisionMm: 0.002,
+    tempCelsius: 28.4,
+    description: 'Bocal volumétrico de alta viscosidade para dosagem de selantes anaeróbicos e adesivos térmicos.',
+    activeFeatures: ['Volumetric flow control', 'Anti-drip valve', 'Viscosity compensation']
+  },
+  {
+    id: 'TOOL_DEBURRING',
+    name: 'Rebarbador & Retificador Orbital Pneumático',
+    category: 'Finishing',
+    icon: 'Sparkles',
+    status: 'READY',
+    wearPercentage: 7.8,
+    operatingHours: 142.0,
+    precisionMm: 0.01,
+    tempCelsius: 36.2,
+    description: 'Cabeçote de desbaste orbital com compensação de força radial para acabamento de juntas fundidas.',
+    activeFeatures: ['Force compliance 5-DOF', 'Rotational speed feedback', 'Dust extraction']
   }
 ];
 
-export const INITIAL_MEMORY_RECORDS: MemoryVectorRecord[] = [
+const BASE_RECORDS: MemoryVectorRecord[] = [
   {
     id: 'MEM-OPT-089',
     timestamp: 'Hoje, 09:42:15',
@@ -111,6 +137,26 @@ export const INITIAL_MEMORY_RECORDS: MemoryVectorRecord[] = [
     description: 'Zona de exclusão recalculada com base no fluxo de operadores na célula de trabalho.',
     synced: true
   }
+];
+
+// Generate exactly 51 records to match telemetry
+export const INITIAL_MEMORY_RECORDS: MemoryVectorRecord[] = [
+  ...BASE_RECORDS,
+  ...Array.from({ length: 47 }, (_, idx) => {
+    const num = 85 - idx;
+    const types: MemoryVectorRecord['type'][] = ['KINEMATIC_CALIBRATION', 'EPISODIC_EXPERIENCE', 'TOOL_WEAR_LEARNING', 'SAFETY_AUDIT'];
+    const chosenType = types[idx % types.length];
+    return {
+      id: `MEM-OPT-0${num}`,
+      timestamp: `Ciclo #${150 - idx}`,
+      type: chosenType,
+      title: `Vetor de Conhecimento Neural #${num}: Otimização Autônoma de Juntas e Força`,
+      accuracyDelta: `+${(99.4 + (idx % 5) * 0.1).toFixed(2)}%`,
+      cycleTimeDelta: `-${(0.12 + (idx % 4) * 0.05).toFixed(2)} s`,
+      description: `Registro sináptico retido no núcleo quântico sobre amortecimento e posicionamento milimétrico em chão de fábrica.`,
+      synced: true
+    };
+  })
 ];
 
 export const PRESET_ROUTINES = [

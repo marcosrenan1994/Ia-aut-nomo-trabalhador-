@@ -6,6 +6,7 @@ import {
   AutonomousLearningSignal,
   OrchestrationPlan
 } from '../types';
+import { NexusQKinematicLanguageEngine } from './NexusQKinematicLanguageEngine';
 import { 
   Brain, 
   Sparkles, 
@@ -28,7 +29,8 @@ import {
   Pause,
   ArrowRight,
   Eye,
-  RefreshCw
+  RefreshCw,
+  Atom
 } from 'lucide-react';
 
 interface CognitiveWisdomBrainProps {
@@ -43,6 +45,10 @@ interface CognitiveWisdomBrainProps {
   isThinking: boolean;
   isExecuting: boolean;
   isOffline: boolean;
+  onUpdateScore?: (delta: number) => void;
+  onResetAndRestart?: () => void;
+  onAddThought?: (thought: AutonomousThought) => void;
+  onAddHeuristic?: (heuristic: AutoDiscoveredHeuristic) => void;
 }
 
 export const CognitiveWisdomBrain: React.FC<CognitiveWisdomBrainProps> = ({
@@ -56,14 +62,18 @@ export const CognitiveWisdomBrain: React.FC<CognitiveWisdomBrainProps> = ({
   currentPlan,
   isThinking,
   isExecuting,
-  isOffline
+  isOffline,
+  onUpdateScore = (_delta: number) => {},
+  onResetAndRestart = () => {},
+  onAddThought,
+  onAddHeuristic
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'thoughts' | 'heuristics' | 'synapses' | 'missions'>('thoughts');
+  const [activeSubTab, setActiveSubTab] = useState<'nexus_q' | 'thoughts' | 'heuristics' | 'synapses' | 'missions'>('nexus_q');
 
   const getRankBadgeColor = (rank: string) => {
     switch (rank) {
       case 'HIPER_CONSCIÊNCIA':
-        return 'bg-purple-500/20 text-purple-300 border-purple-500/40 shadow-purple-500/20';
+        return 'bg-purple-950/80 text-purple-300 border border-purple-600/60 shadow-purple-500/20';
       case 'MESTRE_FABRIL':
         return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-emerald-500/20';
       case 'ESPECIALISTA':
@@ -117,9 +127,9 @@ export const CognitiveWisdomBrain: React.FC<CognitiveWisdomBrainProps> = ({
           <button
             id="btn-toggle-full-autonomy"
             onClick={onToggleFullAutonomy}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black transition-all shadow-lg ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg ${
               evolutionState.isFullAutonomySelfPlanningActive
-                ? 'bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 shadow-emerald-500/30 hover:brightness-110'
+                ? 'bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-emerald-400/20'
                 : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-indigo-600/30 hover:brightness-110'
             }`}
           >
@@ -156,24 +166,43 @@ export const CognitiveWisdomBrain: React.FC<CognitiveWisdomBrainProps> = ({
           >
             <RefreshCw className={`w-4 h-4 text-sky-400 ${isThinking ? 'animate-spin' : ''}`} />
           </button>
+
+          <button
+            id="btn-quick-add-score"
+            onClick={() => onUpdateScore(150)}
+            className="px-2.5 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-mono font-bold transition-all"
+            title="Adicionar +150 pontos de raciocínio cognitivo"
+          >
+            +150 Raciocínio
+          </button>
+
+          <button
+            id="btn-quick-reset-cycle"
+            onClick={onResetAndRestart}
+            className="px-2.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-mono font-bold transition-all"
+            title="Reiniciar base do índice de raciocínio"
+          >
+            Zerar Base
+          </button>
         </div>
       </div>
 
       {/* Wisdom Metrics & Cognitive Index Overview */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
-        <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-800">
+        <div className="bg-slate-950/80 p-3 rounded-lg border border-amber-500/40 shadow-inner">
           <div className="flex items-center justify-between text-slate-400 text-[10px] font-mono">
-            <span>Índice de Sabedoria</span>
+            <span>Índice Cognitivo</span>
             <Award className="w-3.5 h-3.5 text-amber-400" />
           </div>
-          <div className="text-lg font-black font-mono text-amber-400 mt-1">
-            {evolutionState.cognitiveIndexScore} <span className="text-[10px] text-slate-500 font-normal">/ 1000</span>
+          <div className="text-2xl font-black font-mono text-amber-400 mt-1">
+            {evolutionState.cognitiveIndexScore.toLocaleString()} <span className="text-[10px] text-slate-500 font-normal">pts</span>
           </div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
-            <div 
-              className="bg-gradient-to-r from-amber-500 to-emerald-400 h-full rounded-full transition-all duration-500" 
-              style={{ width: `${(evolutionState.cognitiveIndexScore / 1000) * 100}%` }}
-            />
+          <div className="text-[9px] font-mono text-amber-300/90 flex items-center gap-1.5 mt-2 overflow-x-auto">
+            <span title="Número Pi">π≈3.1415</span>
+            <span>•</span>
+            <span title="Proporção Áurea">φ≈1.6180</span>
+            <span>•</span>
+            <span title="Constante de Euler">e≈2.7182</span>
           </div>
         </div>
 
@@ -182,10 +211,10 @@ export const CognitiveWisdomBrain: React.FC<CognitiveWisdomBrainProps> = ({
             <span>Introspecção</span>
             <Eye className="w-3.5 h-3.5 text-purple-400" />
           </div>
-          <div className="text-lg font-black font-mono text-purple-300 mt-1">
+          <div className="text-2xl font-black font-mono text-white mt-1">
             {evolutionState.introspectionRating.toFixed(1)}%
           </div>
-          <span className="text-[9px] text-slate-500 block mt-0.5">Auto-crítica em tempo real</span>
+          <span className="text-[9px] text-slate-500 block mt-1">Auto-crítica em tempo real</span>
         </div>
 
         <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-800">
@@ -193,10 +222,10 @@ export const CognitiveWisdomBrain: React.FC<CognitiveWisdomBrainProps> = ({
             <span>Regras Descobertas</span>
             <BookOpen className="w-3.5 h-3.5 text-sky-400" />
           </div>
-          <div className="text-lg font-black font-mono text-sky-400 mt-1">
+          <div className="text-2xl font-black font-mono text-sky-400 mt-1">
             {evolutionState.autoDiscoveredRulesCount}
           </div>
-          <span className="text-[9px] text-slate-500 block mt-0.5">Heurísticas autorais</span>
+          <span className="text-[9px] text-slate-500 block mt-1">Heurísticas autorais</span>
         </div>
 
         <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-800">
@@ -204,10 +233,10 @@ export const CognitiveWisdomBrain: React.FC<CognitiveWisdomBrainProps> = ({
             <span>Precisão Soberana</span>
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           </div>
-          <div className="text-lg font-black font-mono text-emerald-400 mt-1">
+          <div className="text-2xl font-black font-mono text-emerald-400 mt-1">
             {evolutionState.overallAccuracyRating.toFixed(2)}%
           </div>
-          <span className="text-[9px] text-emerald-400/80 block mt-0.5">±0.001mm calibração</span>
+          <span className="text-[9px] text-emerald-400/80 block mt-1">±0.001mm calibração</span>
         </div>
 
         <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-800">
@@ -215,10 +244,10 @@ export const CognitiveWisdomBrain: React.FC<CognitiveWisdomBrainProps> = ({
             <span>Eficiência Ganha</span>
             <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
           </div>
-          <div className="text-lg font-black font-mono text-indigo-400 mt-1">
+          <div className="text-2xl font-black font-mono text-indigo-400 mt-1">
             +{evolutionState.cumulativeSpeedGainPct.toFixed(1)}%
           </div>
-          <span className="text-[9px] text-slate-500 block mt-0.5">Otimização cinemática</span>
+          <span className="text-[9px] text-slate-500 block mt-1">Otimização cinemática</span>
         </div>
 
         <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-800">
@@ -226,10 +255,10 @@ export const CognitiveWisdomBrain: React.FC<CognitiveWisdomBrainProps> = ({
             <span>Energia Poupada</span>
             <Zap className="w-3.5 h-3.5 text-teal-400" />
           </div>
-          <div className="text-lg font-black font-mono text-teal-300 mt-1">
+          <div className="text-2xl font-black font-mono text-teal-300 mt-1">
             {evolutionState.cumulativeEnergySavedJoules.toLocaleString()} J
           </div>
-          <span className="text-[9px] text-slate-500 block mt-0.5">Gestão de potência</span>
+          <span className="text-[9px] text-slate-500 block mt-1">Gestão de potência</span>
         </div>
       </div>
 
@@ -255,7 +284,20 @@ export const CognitiveWisdomBrain: React.FC<CognitiveWisdomBrainProps> = ({
       </div>
 
       {/* Sub-tab Navigation */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-2">
+        <button
+          id="subtab-nexus-q-btn"
+          onClick={() => setActiveSubTab('nexus_q')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all ${
+            activeSubTab === 'nexus_q'
+              ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30 ring-1 ring-cyan-400'
+              : 'bg-cyan-950/40 text-cyan-400 hover:bg-cyan-950/80 border border-cyan-800/60'
+          }`}
+        >
+          <Atom className="w-3.5 h-3.5 text-cyan-300" />
+          <span>NEXUS-Q VISÃO CINEMÁTICA (Vídeo & Tradutor)</span>
+        </button>
+
         <button
           id="subtab-thoughts-btn"
           onClick={() => setActiveSubTab('thoughts')}
@@ -311,6 +353,17 @@ export const CognitiveWisdomBrain: React.FC<CognitiveWisdomBrainProps> = ({
 
       {/* Subtab Views */}
       <div className="min-h-[220px]">
+        {/* Nexus-Q Cinematic Language Engine from the video */}
+        {activeSubTab === 'nexus_q' && (
+          <NexusQKinematicLanguageEngine
+            evolutionState={evolutionState}
+            onUpdateScore={onUpdateScore}
+            onResetAndRestart={onResetAndRestart}
+            onAddThought={onAddThought}
+            onAddHeuristic={onAddHeuristic}
+          />
+        )}
+
         {/* Thoughts Stream Tab */}
         {activeSubTab === 'thoughts' && (
           <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
@@ -349,10 +402,10 @@ export const CognitiveWisdomBrain: React.FC<CognitiveWisdomBrainProps> = ({
         {/* Heuristics Tab */}
         {activeSubTab === 'heuristics' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {heuristics.map((h) => (
+            {heuristics.map((h, idx) => (
               <div
-                key={h.id}
-                id={`heuristic-card-${h.id}`}
+                key={`${h.id}-${idx}`}
+                id={`heuristic-card-${h.id}-${idx}`}
                 className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-2 flex flex-col justify-between"
               >
                 <div>

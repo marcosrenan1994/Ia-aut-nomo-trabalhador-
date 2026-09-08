@@ -39,17 +39,21 @@ export const RobotCanvas: React.FC<RobotCanvasProps> = ({
       const width = canvas.width;
       const height = canvas.height;
 
-      // Clear & Draw High-Tech Factory Floor background
+      // Clear & Draw High-Tech Smart Factory Floor (inspired by Chinese Smart Factory video)
       ctx.clearRect(0, 0, width, height);
 
-      // Dark slate engineering grid
-      ctx.fillStyle = '#0f172a';
+      // Metallic epoxy floor gradient
+      const floorGrad = ctx.createLinearGradient(0, 0, 0, height);
+      floorGrad.addColorStop(0, '#090d16');
+      floorGrad.addColorStop(0.5, '#0f172a');
+      floorGrad.addColorStop(1, '#1e293b');
+      ctx.fillStyle = floorGrad;
       ctx.fillRect(0, 0, width, height);
 
-      // Grid lines
-      ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+      // High-precision engineering grid lines
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
       ctx.lineWidth = 1;
-      const gridSize = 32;
+      const gridSize = 40;
       for (let x = 0; x < width; x += gridSize) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
@@ -63,41 +67,83 @@ export const RobotCanvas: React.FC<RobotCanvasProps> = ({
         ctx.stroke();
       }
 
-      // Safety Zone Boundary Lines
+      // Bright yellow safety demarcation lines (typical in modern smart factories)
       ctx.save();
-      ctx.strokeStyle = emergencyStop ? 'rgba(239, 68, 68, 0.8)' : 'rgba(245, 158, 11, 0.5)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([8, 8]);
-      ctx.strokeRect(40, 40, width - 80, height - 80);
+      ctx.strokeStyle = emergencyStop ? 'rgba(239, 68, 68, 0.9)' : 'rgba(234, 179, 8, 0.75)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([12, 8]);
+      ctx.strokeRect(30, 30, width - 60, height - 60);
       ctx.restore();
+
+      // Overhead Gantry Lighting reflections
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.04)';
+      ctx.fillRect(width * 0.2, 0, width * 0.6, height);
+
+      // Background Automated AGV Carts (moving back & forth)
+      const agvPosX = (width * 0.25 + Math.sin(time * 0.5) * 80) % width;
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(agvPosX, 90, 70, 35);
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(agvPosX + 10, 95, 50, 15);
+      // AGV blinking LED status
+      ctx.fillStyle = Math.floor(time * 4) % 2 === 0 ? '#10b981' : '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(agvPosX + 35, 102, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Background Humanoid Assistant Robot Silhouette (inspired by video)
+      const humX = width * 0.78;
+      const humY = 110;
+      ctx.fillStyle = '#334155';
+      ctx.beginPath();
+      ctx.arc(humX, humY - 20, 8, 0, Math.PI * 2); // Head
+      ctx.fill();
+      ctx.fillRect(humX - 10, humY - 10, 20, 30); // Torso
+      ctx.fillRect(humX - 12, humY + 20, 8, 25);  // Left leg
+      ctx.fillRect(humX + 4, humY + 20, 8, 25);   // Right leg
+      // Glowing chest core on humanoid assistant
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(humX, humY, 3, 0, Math.PI * 2);
+      ctx.fill();
 
       // Factory Pedestal Base / Workstation
       const baseX = width * 0.42;
       const baseY = height * 0.78;
 
-      // Conveyor & Work Tables
+      // Smart Conveyor & Work Tables with LED status strips
       ctx.fillStyle = '#1e293b';
-      ctx.fillRect(60, baseY + 15, 160, 40); // Table A (Input)
-      ctx.fillRect(width - 220, baseY + 15, 160, 40); // Table B (Output)
+      ctx.fillRect(60, baseY + 15, 160, 45); // Table A (Input Conveyor)
+      ctx.fillRect(width - 220, baseY + 15, 160, 45); // Table B (Output Sorting)
 
-      // Conveyor stripes
-      ctx.fillStyle = '#334155';
-      for (let i = 0; i < 4; i++) {
-        ctx.fillRect(70 + i * 36, baseY + 20, 24, 10);
-        ctx.fillRect(width - 210 + i * 36, baseY + 20, 24, 10);
+      // Conveyor LED accent strip
+      ctx.fillStyle = '#0ea5e9';
+      ctx.fillRect(60, baseY + 55, 160, 3);
+      ctx.fillRect(width - 220, baseY + 55, 160, 3);
+
+      // Conveyor rollers & moving packages
+      ctx.fillStyle = '#475569';
+      for (let i = 0; i < 5; i++) {
+        const rollerOffset = (time * 15) % 30;
+        ctx.fillRect(70 + i * 32 + (isExecuting ? rollerOffset : 0) % 32, baseY + 22, 16, 20);
+        ctx.fillRect(width - 210 + i * 32, baseY + 22, 16, 20);
       }
 
       // Workstation Labels
-      ctx.font = '10px monospace';
-      ctx.fillStyle = '#94a3b8';
-      ctx.fillText('ESTAÇÃO A: ALIMENTAÇÃO', 65, baseY + 68);
-      ctx.fillText('ESTAÇÃO B: FINAL / SAÍDA', width - 215, baseY + 68);
-
-      // Pallet Object on Table A
+      ctx.font = 'bold 10px monospace';
       ctx.fillStyle = '#38bdf8';
-      ctx.fillRect(110, baseY - 5, 45, 20);
-      ctx.strokeStyle = '#0284c7';
-      ctx.strokeRect(110, baseY - 5, 45, 20);
+      ctx.fillText('ESTAÇÃO A: ALIMENTAÇÃO AGV', 65, baseY + 72);
+      ctx.fillText('ESTAÇÃO B: CLASSIFICAÇÃO 24H', width - 215, baseY + 72);
+
+      // Pallet Object on Table A (moving dynamically when executing)
+      const packageOffset = isExecuting ? (Math.sin(time * 3) * 20) : 0;
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(110 + packageOffset, baseY - 2, 42, 22);
+      ctx.strokeStyle = '#d97706';
+      ctx.strokeRect(110 + packageOffset, baseY - 2, 42, 22);
+      // QR Code on package
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(120 + packageOffset, baseY + 4, 10, 10);
 
       // Robotic Arm Heavy Heavy Pedestal Base
       ctx.fillStyle = '#1e293b';

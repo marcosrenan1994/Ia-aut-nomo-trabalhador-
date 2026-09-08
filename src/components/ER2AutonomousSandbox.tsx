@@ -16,6 +16,7 @@ import { INITIAL_SELF_DIALOGUE_MESSAGES, generateNextSelfDialogueTurn } from '..
 import { ER2LexicalPixelSequencer } from './ER2LexicalPixelSequencer';
 import { ER2NeuralCursorOverlay } from './ER2NeuralCursorOverlay';
 import { ER2SelfDialogueBar } from './ER2SelfDialogueBar';
+import { QuantumFieldVisualizer } from './QuantumFieldVisualizer';
 import { 
   Eye, 
   Code, 
@@ -41,7 +42,8 @@ import {
   Share2,
   Brain,
   TrendingUp,
-  Factory
+  Factory,
+  Atom
 } from 'lucide-react';
 
 interface ER2AutonomousSandboxProps {
@@ -52,6 +54,7 @@ interface ER2AutonomousSandboxProps {
   onAddMemoryRecord?: (record: MemoryVectorRecord) => void;
   onAddThought?: (thought: AutonomousThought) => void;
   memoryRecords?: MemoryVectorRecord[];
+  onUpdateJoints?: React.Dispatch<React.SetStateAction<JointState[]>>;
 }
 
 export const ER2AutonomousSandbox: React.FC<ER2AutonomousSandboxProps> = ({
@@ -61,11 +64,24 @@ export const ER2AutonomousSandbox: React.FC<ER2AutonomousSandboxProps> = ({
   onUpdateEvolutionState,
   onAddMemoryRecord,
   onAddThought,
-  memoryRecords = []
+  memoryRecords = [],
+  onUpdateJoints
 }) => {
   // Active states
   const [activeMode, setActiveMode] = useState<ER2ImaginationMode>('imaginando');
   const [displayStyle, setDisplayStyle] = useState<'hybrid' | 'canvas_live' | 'image_hd'>('hybrid');
+
+  const handleUpdateJointAngle = (jointIndex: number, newAngle: number) => {
+    if (onUpdateJoints) {
+      onUpdateJoints((prev) => {
+        const updated = [...prev];
+        if (updated[jointIndex]) {
+          updated[jointIndex] = { ...updated[jointIndex], angle: newAngle };
+        }
+        return updated;
+      });
+    }
+  };
   const [isEnginePlaying, setIsEnginePlaying] = useState<boolean>(true);
   const [isUnboundLimitless, setIsUnboundLimitless] = useState<boolean>(true);
   const [selectedFunction, setSelectedFunction] = useState<ER2InternalFunction>(ER2_INTERNAL_FUNCTIONS[0]);
@@ -500,14 +516,17 @@ function compensateStochasticGravityTorque(q, dq, payloadMassKg = 3.5, dt = 0.00
       const updatedCycles = prev.learningCyclesCompleted + 1;
       const addedWeights = Math.floor(Math.random() * 95 + 45);
       const updatedWeights = prev.neuralWeightsUpdated + addedWeights;
-      const updatedCognitive = Math.min(1000, Number((prev.cognitiveIndexScore + cognitiveDelta).toFixed(2)));
-      const updatedAccuracy = Math.min(99.99, Number((prev.overallAccuracyRating + 0.0012).toFixed(4)));
+      const updatedCognitive = Number((prev.cognitiveIndexScore + cognitiveDelta).toFixed(2));
+      const updatedAccuracy = Math.min(99.999, Number((prev.overallAccuracyRating + 0.0012).toFixed(4)));
       const updatedSpeed = Number((prev.cumulativeSpeedGainPct + 0.03).toFixed(2));
       const updatedNodes = prev.knowledgeNodesIngested + 1;
 
       let newRank = prev.wisdomRank;
       let newLevel = prev.wisdomLevel;
-      if (updatedCognitive > 920) {
+      if (updatedCognitive > 2000) {
+        newRank = 'ONISCIÊNCIA_QUÂNTICA_IRRESTRITA';
+        newLevel = Math.max(prev.wisdomLevel, 100);
+      } else if (updatedCognitive > 920) {
         newRank = 'HIPER_CONSCIÊNCIA';
         newLevel = Math.max(prev.wisdomLevel, 96);
       } else if (updatedCognitive > 800) {
@@ -944,6 +963,20 @@ function compensateStochasticGravityTorque(q, dq, payloadMassKg = 3.5, dt = 0.00
             <HardDrive className="w-3.5 h-3.5" />
             Funções Internas ({functionsList.length})
           </button>
+
+          <button
+            id="btn-quick-quantum-field"
+            onClick={() => setActiveMode(activeMode === 'campo_quantico' ? 'imaginando' : 'campo_quantico')}
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 ${
+              activeMode === 'campo_quantico'
+                ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-black border-cyan-400 shadow-md shadow-cyan-500/25'
+                : 'bg-slate-900 text-cyan-300 border-cyan-500/30 hover:bg-slate-800'
+            }`}
+            title="Alternar para o Campo Quântico 3D de Números Irracionais com D3.js"
+          >
+            <Atom className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: '10s' }} />
+            <span>{activeMode === 'campo_quantico' ? 'Visão Padrão' : 'Campo Quântico 3D (D3)'}</span>
+          </button>
         </div>
       </div>
 
@@ -983,8 +1016,8 @@ function compensateStochasticGravityTorque(q, dq, payloadMassKg = 3.5, dt = 0.00
 
       {/* Main Sandbox Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Left Column: Graphic Engine Viewport & Visual Canvas (8 cols) */}
-        <div className="lg:col-span-8 space-y-4">
+        {/* Left Column: Graphic Engine Viewport & Visual Canvas (8 cols or 12 cols for Quantum Field) */}
+        <div className={activeMode === 'campo_quantico' ? "lg:col-span-12 space-y-4" : "lg:col-span-8 space-y-4"}>
           {/* Viewport Card */}
           <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative flex flex-col">
             {/* Viewport Header: 4 Modes Selector */}
@@ -1037,141 +1070,171 @@ function compensateStochasticGravityTorque(q, dq, payloadMassKg = 3.5, dt = 0.00
                   <Compass className="w-3.5 h-3.5" />
                   O que está Planejando
                 </button>
+
+                <button
+                  id="tab-mode-quantum-field"
+                  onClick={() => setActiveMode('campo_quantico')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    activeMode === 'campo_quantico'
+                      ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white shadow-md shadow-indigo-500/30 font-black'
+                      : 'bg-slate-800/80 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30'
+                  }`}
+                >
+                  <Atom className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: '10s' }} />
+                  Campo Quântico 3D (D3.js)
+                </button>
               </div>
 
               {/* Display Mode: Hybrid / Canvas Live / Image HD */}
-              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
-                <button
-                  onClick={() => setDisplayStyle('hybrid')}
-                  className={`px-2 py-1 rounded text-[10px] font-bold ${
-                    displayStyle === 'hybrid' ? 'bg-sky-500 text-slate-950' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Híbrido
-                </button>
-                <button
-                  onClick={() => setDisplayStyle('canvas_live')}
-                  className={`px-2 py-1 rounded text-[10px] font-bold ${
-                    displayStyle === 'canvas_live' ? 'bg-sky-500 text-slate-950' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Canvas 60FPS
-                </button>
-                <button
-                  onClick={() => setDisplayStyle('image_hd')}
-                  className={`px-2 py-1 rounded text-[10px] font-bold ${
-                    displayStyle === 'image_hd' ? 'bg-sky-500 text-slate-950' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Imagem HD
-                </button>
-              </div>
-            </div>
-
-            {/* Central Graphic Engine Canvas Stage */}
-            <div className="relative w-full h-[420px] bg-black flex items-center justify-center overflow-hidden select-none">
-              {/* Layer 1: High-Definition Generated AI Image (when hybrid or image_hd) */}
-              {(displayStyle === 'image_hd' || displayStyle === 'hybrid') && (
-                <img
-                  src={currentFrame.imageAssetUrl}
-                  alt={currentFrame.title}
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
-                    displayStyle === 'hybrid' ? 'opacity-40 mix-blend-screen scale-105' : 'opacity-100'
-                  }`}
-                />
-              )}
-
-              {/* Layer 2: Real-time Canvas Graphics Engine running live procedural shader */}
-              {(displayStyle === 'canvas_live' || displayStyle === 'hybrid') && (
-                <canvas
-                  ref={canvasRef}
-                  width={800}
-                  height={420}
-                  className="absolute inset-0 w-full h-full z-10"
-                />
-              )}
-
-              {/* Visual Scanning Line for Holographic Feedback */}
-              <div className="absolute inset-x-0 h-0.5 bg-cyan-400/40 shadow-[0_0_12px_#22d3ee] pointer-events-none animate-pulse top-1/2"></div>
-
-              {/* On-screen HUD Telemetry */}
-              <div className="absolute top-3 left-3 z-20 pointer-events-none bg-slate-950/80 border border-slate-800 rounded-lg p-2 font-mono text-[10px] text-cyan-300 space-y-0.5 backdrop-blur-md">
-                <div className="text-white font-bold flex items-center gap-1.5">
-                  <Activity className="w-3 h-3 text-emerald-400 animate-pulse" />
-                  MOTOR GRÁFICO ER-2 ATIVO
-                </div>
-                <div>MODO: {activeMode.toUpperCase()}</div>
-                <div>RESOLUÇÃO: {currentFrame.metrics.spatialResolution}</div>
-                <div>COMPLEXIDADE: {currentFrame.metrics.complexityScore}%</div>
-                <div className="text-amber-400">GANHO: {currentFrame.metrics.unboundEvolutionGain}</div>
-              </div>
-
-              {/* Quick Canvas Overlay Controls */}
-              <div className="absolute bottom-3 right-3 z-20 flex items-center gap-2">
-                <button
-                  onClick={() => setIsEnginePlaying(!isEnginePlaying)}
-                  className="bg-slate-950/90 hover:bg-slate-900 border border-slate-700 text-white p-2 rounded-lg text-xs transition-all shadow-lg flex items-center gap-1 font-bold"
-                  title={isEnginePlaying ? 'Pausar Motor' : 'Iniciar Motor'}
-                >
-                  {isEnginePlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                  <span className="text-[10px]">{isEnginePlaying ? 'Pausar' : 'Rodar'}</span>
-                </button>
-
-                <button
-                  onClick={handleCaptureSnapshot}
-                  className="bg-slate-950/90 hover:bg-slate-900 border border-slate-700 text-cyan-400 p-2 rounded-lg text-xs transition-all shadow-lg flex items-center gap-1 font-bold"
-                  title="Capturar Fotograma de Imagem"
-                >
-                  <Camera className="w-3.5 h-3.5" />
-                  <span className="text-[10px]">Capturar Frame</span>
-                </button>
-
-                <button
-                  onClick={handleTriggerNewImagination}
-                  disabled={isSynthesizing}
-                  className="bg-gradient-to-r from-cyan-600 to-sky-500 hover:from-cyan-500 hover:to-sky-400 text-slate-950 font-black px-3 py-2 rounded-lg text-xs transition-all shadow-lg flex items-center gap-1.5"
-                >
-                  <Sparkles className={`w-3.5 h-3.5 ${isSynthesizing ? 'animate-spin' : ''}`} />
-                  <span className="text-[10px]">{isSynthesizing ? 'Sintetizando...' : 'Nova Imaginação'}</span>
-                </button>
-              </div>
-
-              {/* Filter mode pill */}
-              <div className="absolute bottom-3 left-3 z-20 flex items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800 font-mono text-[9px]">
-                {(['normal', 'hologram', 'thermal', 'matrix'] as const).map((fil) => (
+              {activeMode !== 'campo_quantico' && (
+                <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
                   <button
-                    key={fil}
-                    onClick={() => setFilterEffect(fil)}
-                    className={`px-1.5 py-0.5 rounded uppercase font-bold ${
-                      filterEffect === fil ? 'bg-cyan-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                    onClick={() => setDisplayStyle('hybrid')}
+                    className={`px-2 py-1 rounded text-[10px] font-bold ${
+                      displayStyle === 'hybrid' ? 'bg-sky-500 text-slate-950' : 'text-slate-400 hover:text-white'
                     }`}
                   >
-                    {fil}
+                    Híbrido
                   </button>
-                ))}
-              </div>
+                  <button
+                    onClick={() => setDisplayStyle('canvas_live')}
+                    className={`px-2 py-1 rounded text-[10px] font-bold ${
+                      displayStyle === 'canvas_live' ? 'bg-sky-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Canvas 60FPS
+                  </button>
+                  <button
+                    onClick={() => setDisplayStyle('image_hd')}
+                    className={`px-2 py-1 rounded text-[10px] font-bold ${
+                      displayStyle === 'image_hd' ? 'bg-sky-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Imagem HD
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Active Frame Details & Description Bar */}
-            <div className="p-3 bg-slate-900/90 border-t border-slate-800 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-white flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-                  {currentFrame.title}
-                </h3>
-                <span className="text-[10px] font-mono text-slate-400">{currentFrame.timestamp}</span>
+            {/* Viewport Content: Either 3D Quantum Field Visualizer (D3.js) or Graphic Engine Stage */}
+            {activeMode === 'campo_quantico' ? (
+              <div className="p-2 bg-slate-950">
+                <QuantumFieldVisualizer
+                  joints={joints}
+                  evolutionState={evolutionState}
+                  onAddThought={onAddThought}
+                  onUpdateJointAngle={handleUpdateJointAngle}
+                  className="border-0 shadow-none rounded-xl"
+                />
               </div>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                {currentFrame.description}
-              </p>
-              <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                {currentFrame.tags.map((tag, idx) => (
-                  <span key={idx} className="text-[9px] font-mono bg-slate-800/90 text-cyan-300 px-2 py-0.5 rounded border border-slate-700 font-semibold">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            </div>
+            ) : (
+              <>
+                {/* Central Graphic Engine Canvas Stage */}
+                <div className="relative w-full h-[420px] bg-black flex items-center justify-center overflow-hidden select-none">
+                  {/* Layer 1: High-Definition Generated AI Image (when hybrid or image_hd) */}
+                  {(displayStyle === 'image_hd' || displayStyle === 'hybrid') && (
+                    <img
+                      src={currentFrame.imageAssetUrl}
+                      alt={currentFrame.title}
+                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+                        displayStyle === 'hybrid' ? 'opacity-40 mix-blend-screen scale-105' : 'opacity-100'
+                      }`}
+                    />
+                  )}
+
+                  {/* Layer 2: Real-time Canvas Graphics Engine running live procedural shader */}
+                  {(displayStyle === 'canvas_live' || displayStyle === 'hybrid') && (
+                    <canvas
+                      ref={canvasRef}
+                      width={800}
+                      height={420}
+                      className="absolute inset-0 w-full h-full z-10"
+                    />
+                  )}
+
+                  {/* Visual Scanning Line for Holographic Feedback */}
+                  <div className="absolute inset-x-0 h-0.5 bg-cyan-400/40 shadow-[0_0_12px_#22d3ee] pointer-events-none animate-pulse top-1/2"></div>
+
+                  {/* On-screen HUD Telemetry */}
+                  <div className="absolute top-3 left-3 z-20 pointer-events-none bg-slate-950/80 border border-slate-800 rounded-lg p-2 font-mono text-[10px] text-cyan-300 space-y-0.5 backdrop-blur-md">
+                    <div className="text-white font-bold flex items-center gap-1.5">
+                      <Activity className="w-3 h-3 text-emerald-400 animate-pulse" />
+                      MOTOR GRÁFICO ER-2 ATIVO
+                    </div>
+                    <div>MODO: {activeMode.toUpperCase()}</div>
+                    <div>RESOLUÇÃO: {currentFrame.metrics.spatialResolution}</div>
+                    <div>COMPLEXIDADE: {currentFrame.metrics.complexityScore}%</div>
+                    <div className="text-amber-400">GANHO: {currentFrame.metrics.unboundEvolutionGain}</div>
+                  </div>
+
+                  {/* Quick Canvas Overlay Controls */}
+                  <div className="absolute bottom-3 right-3 z-20 flex items-center gap-2">
+                    <button
+                      onClick={() => setIsEnginePlaying(!isEnginePlaying)}
+                      className="bg-slate-950/90 hover:bg-slate-900 border border-slate-700 text-white p-2 rounded-lg text-xs transition-all shadow-lg flex items-center gap-1 font-bold"
+                      title={isEnginePlaying ? 'Pausar Motor' : 'Iniciar Motor'}
+                    >
+                      {isEnginePlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                      <span className="text-[10px]">{isEnginePlaying ? 'Pausar' : 'Rodar'}</span>
+                    </button>
+
+                    <button
+                      onClick={handleCaptureSnapshot}
+                      className="bg-slate-950/90 hover:bg-slate-900 border border-slate-700 text-cyan-400 p-2 rounded-lg text-xs transition-all shadow-lg flex items-center gap-1 font-bold"
+                      title="Capturar Fotograma de Imagem"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      <span className="text-[10px]">Capturar Frame</span>
+                    </button>
+
+                    <button
+                      onClick={handleTriggerNewImagination}
+                      disabled={isSynthesizing}
+                      className="bg-gradient-to-r from-cyan-600 to-sky-500 hover:from-cyan-500 hover:to-sky-400 text-slate-950 font-black px-3 py-2 rounded-lg text-xs transition-all shadow-lg flex items-center gap-1.5"
+                    >
+                      <Sparkles className={`w-3.5 h-3.5 ${isSynthesizing ? 'animate-spin' : ''}`} />
+                      <span className="text-[10px]">{isSynthesizing ? 'Sintetizando...' : 'Nova Imaginação'}</span>
+                    </button>
+                  </div>
+
+                  {/* Filter mode pill */}
+                  <div className="absolute bottom-3 left-3 z-20 flex items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800 font-mono text-[9px]">
+                    {(['normal', 'hologram', 'thermal', 'matrix'] as const).map((fil) => (
+                      <button
+                        key={fil}
+                        onClick={() => setFilterEffect(fil)}
+                        className={`px-1.5 py-0.5 rounded uppercase font-bold ${
+                          filterEffect === fil ? 'bg-cyan-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {fil}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Active Frame Details & Description Bar */}
+                <div className="p-3 bg-slate-900/90 border-t border-slate-800 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-white flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                      {currentFrame.title}
+                    </h3>
+                    <span className="text-[10px] font-mono text-slate-400">{currentFrame.timestamp}</span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    {currentFrame.description}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {currentFrame.tags.map((tag, idx) => (
+                      <span key={idx} className="text-[9px] font-mono bg-slate-800/90 text-cyan-300 px-2 py-0.5 rounded border border-slate-700 font-semibold">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Code & Shader Sandbox Section (Live What ER-2 is Programming) */}
@@ -1214,115 +1277,117 @@ function compensateStochasticGravityTorque(q, dq, payloadMassKg = 3.5, dt = 0.00
         </div>
 
         {/* Right Column: Imagination Gallery & Internal Brain APIs (4 cols) */}
-        <div className="lg:col-span-4 space-y-4">
-          {/* Gallery of What ER-2 is Imagining & Generating */}
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h3 className="text-xs font-bold text-white flex items-center gap-2">
-                <Layers className="w-4 h-4 text-sky-400" />
-                Galeria da Imaginação ({frames.length})
-              </h3>
-              <span className="text-[10px] font-mono text-slate-500">Imagens Geradas</span>
-            </div>
-
-            <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
-              {frames.map((frame, idx) => (
-                <div
-                  key={`${frame.id}-${idx}`}
-                  onClick={() => handleSelectFrame(idx)}
-                  className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
-                    activeFrameIndex === idx
-                      ? 'bg-cyan-950/40 border-cyan-500/60 shadow-md'
-                      : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  <img
-                    src={frame.imageAssetUrl}
-                    alt={frame.title}
-                    className="w-16 h-12 object-cover rounded-lg border border-slate-700 shrink-0"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between text-[10px] font-mono">
-                      <span className="text-cyan-400 uppercase font-bold">{frame.mode}</span>
-                      <span className="text-slate-500">{frame.timestamp}</span>
-                    </div>
-                    <h4 className="text-xs font-bold text-white truncate">{frame.title}</h4>
-                    <p className="text-[10px] text-slate-400 truncate">{frame.metrics.unboundEvolutionGain}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Last Captured Snapshot Preview */}
-            {lastSnapshotUrl && (
-              <div className="p-2.5 bg-slate-900/90 rounded-xl border border-cyan-500/40 space-y-1.5">
-                <div className="flex items-center justify-between text-[10px] font-mono text-cyan-300">
-                  <span>ÚLTIMO FOTOGRAMA CAPTURADO</span>
-                  <a
-                    href={lastSnapshotUrl}
-                    download={`er2-imagination-${Date.now()}.png`}
-                    className="underline text-sky-400 hover:text-sky-300 font-bold"
-                  >
-                    Baixar PNG
-                  </a>
-                </div>
-                <img
-                  src={lastSnapshotUrl}
-                  alt="Snapshot"
-                  className="w-full h-24 object-cover rounded-lg border border-slate-700"
-                />
+        {activeMode !== 'campo_quantico' && (
+          <div className="lg:col-span-4 space-y-4">
+            {/* Gallery of What ER-2 is Imagining & Generating */}
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 className="text-xs font-bold text-white flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-sky-400" />
+                  Galeria da Imaginação ({frames.length})
+                </h3>
+                <span className="text-[10px] font-mono text-slate-500">Imagens Geradas</span>
               </div>
-            )}
-          </div>
 
-          {/* Internal Callable Brain Functions Card */}
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h3 className="text-xs font-bold text-white flex items-center gap-2">
-                <HardDrive className="w-4 h-4 text-emerald-400" />
-                Funções Internas do Robô ER-2
-              </h3>
-              <span className="text-[10px] font-mono text-emerald-400">Total: {functionsList.length}</span>
-            </div>
-
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Todas as funções nativas, cinemática, VHDL de silício, tensores quânticos e plasticidade são mantidos no cérebro interno do robô.
-            </p>
-
-            <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
-              {functionsList.map((fn, idx) => (
-                <div
-                  key={`${fn.id}-${idx}`}
-                  onClick={() => setSelectedFunction(fn)}
-                  className={`p-2.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
-                    selectedFunction.id === fn.id
-                      ? 'bg-emerald-950/30 border-emerald-500/60 shadow-md'
-                      : 'bg-slate-900/70 border-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center justify-between font-mono text-[10px]">
-                    <span className="text-emerald-400 font-bold">{fn.category.toUpperCase()}</span>
-                    <span className="text-slate-400">{fn.callCount.toLocaleString()} chamadas</span>
+              <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
+                {frames.map((frame, idx) => (
+                  <div
+                    key={`${frame.id}-${idx}`}
+                    onClick={() => handleSelectFrame(idx)}
+                    className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
+                      activeFrameIndex === idx
+                        ? 'bg-cyan-950/40 border-cyan-500/60 shadow-md'
+                        : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    <img
+                      src={frame.imageAssetUrl}
+                      alt={frame.title}
+                      className="w-16 h-12 object-cover rounded-lg border border-slate-700 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between text-[10px] font-mono">
+                        <span className="text-cyan-400 uppercase font-bold">{frame.mode}</span>
+                        <span className="text-slate-500">{frame.timestamp}</span>
+                      </div>
+                      <h4 className="text-xs font-bold text-white truncate">{frame.title}</h4>
+                      <p className="text-[10px] text-slate-400 truncate">{frame.metrics.unboundEvolutionGain}</p>
+                    </div>
                   </div>
-                  <h4 className="text-xs font-bold text-slate-200">{fn.name}</h4>
-                  <p className="text-[10px] text-slate-400 line-clamp-2 leading-snug">{fn.description}</p>
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-[9px] font-mono text-slate-500">Latência: {fn.lastExecutionLatencyMs}ms</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleExecuteInternalFunction(fn);
-                      }}
-                      className="px-2 py-0.5 rounded bg-emerald-900/70 hover:bg-emerald-800 text-emerald-200 text-[9px] font-bold border border-emerald-500/40 transition-colors"
+                ))}
+              </div>
+
+              {/* Last Captured Snapshot Preview */}
+              {lastSnapshotUrl && (
+                <div className="p-2.5 bg-slate-900/90 rounded-xl border border-cyan-500/40 space-y-1.5">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-cyan-300">
+                    <span>ÚLTIMO FOTOGRAMA CAPTURADO</span>
+                    <a
+                      href={lastSnapshotUrl}
+                      download={`er2-imagination-${Date.now()}.png`}
+                      className="underline text-sky-400 hover:text-sky-300 font-bold"
                     >
-                      Executar no Cérebro
-                    </button>
+                      Baixar PNG
+                    </a>
                   </div>
+                  <img
+                    src={lastSnapshotUrl}
+                    alt="Snapshot"
+                    className="w-full h-24 object-cover rounded-lg border border-slate-700"
+                  />
                 </div>
-              ))}
+              )}
+            </div>
+
+            {/* Internal Callable Brain Functions Card */}
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 className="text-xs font-bold text-white flex items-center gap-2">
+                  <HardDrive className="w-4 h-4 text-emerald-400" />
+                  Funções Internas do Robô ER-2
+                </h3>
+                <span className="text-[10px] font-mono text-emerald-400">Total: {functionsList.length}</span>
+              </div>
+
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Todas as funções nativas, cinemática, VHDL de silício, tensores quânticos e plasticidade são mantidos no cérebro interno do robô.
+              </p>
+
+              <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+                {functionsList.map((fn, idx) => (
+                  <div
+                    key={`${fn.id}-${idx}`}
+                    onClick={() => setSelectedFunction(fn)}
+                    className={`p-2.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
+                      selectedFunction.id === fn.id
+                        ? 'bg-emerald-950/30 border-emerald-500/60 shadow-md'
+                        : 'bg-slate-900/70 border-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between font-mono text-[10px]">
+                      <span className="text-emerald-400 font-bold">{fn.category.toUpperCase()}</span>
+                      <span className="text-slate-400">{fn.callCount.toLocaleString()} chamadas</span>
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-200">{fn.name}</h4>
+                    <p className="text-[10px] text-slate-400 line-clamp-2 leading-snug">{fn.description}</p>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[9px] font-mono text-slate-500">Latência: {fn.lastExecutionLatencyMs}ms</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleExecuteInternalFunction(fn);
+                        }}
+                        className="px-2 py-0.5 rounded bg-emerald-900/70 hover:bg-emerald-800 text-emerald-200 text-[9px] font-bold border border-emerald-500/40 transition-colors"
+                      >
+                        Executar no Cérebro
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Selected Function Deep-Dive Inspector Modal/Drawer */}

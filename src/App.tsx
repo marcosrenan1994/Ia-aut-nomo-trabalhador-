@@ -30,6 +30,9 @@ import { ER2AutonomousSandbox } from './components/ER2AutonomousSandbox';
 import { ER2Workstation6DOF } from './components/ER2Workstation6DOF';
 import { GlobalPhysicalIndustryPlanner } from './components/GlobalPhysicalIndustryPlanner';
 import { PedestreFormalDeliverySTI } from './components/PedestreFormalDeliverySTI';
+import { ContainerWithMostWaterSorter3D } from './components/ContainerWithMostWaterSorter3D';
+import { AutonomousAgentOrchestratorHub } from './components/AutonomousAgentOrchestratorHub';
+import { QuantumAutonomousMeetingRoom } from './components/QuantumAutonomousMeetingRoom';
 import { 
   Bot, 
   Cpu, 
@@ -52,13 +55,15 @@ import {
   Eye,
   Factory,
   Footprints,
-  UserCheck
+  UserCheck,
+  Droplet,
+  Users
 } from 'lucide-react';
 
 const INITIAL_JOINTS: JointState[] = [
-  { id: 1, name: 'Base Yaw (J1)', angle: 0, minAngle: -170, maxAngle: 170, torque: 12.4, temperature: 36.5 },
-  { id: 2, name: 'Shoulder Pitch (J2)', angle: -25, minAngle: -100, maxAngle: 120, torque: 34.8, temperature: 41.2 },
-  { id: 3, name: 'Elbow Pitch (J3)', angle: 55, minAngle: -90, maxAngle: 135, torque: 28.1, temperature: 39.8 },
+  { id: 1, name: 'Base Yaw (J1)', angle: 122, minAngle: -170, maxAngle: 170, torque: 12.4, temperature: 36.5 },
+  { id: 2, name: 'Shoulder Pitch (J2)', angle: -70, minAngle: -100, maxAngle: 120, torque: 34.8, temperature: 41.2 },
+  { id: 3, name: 'Elbow Pitch (J3)', angle: -78, minAngle: -90, maxAngle: 135, torque: 28.1, temperature: 39.8 },
   { id: 4, name: 'Wrist Roll (J4)', angle: -30, minAngle: -180, maxAngle: 180, torque: 8.2, temperature: 34.0 },
   { id: 5, name: 'Wrist Pitch (J5)', angle: 10, minAngle: -115, maxAngle: 115, torque: 6.5, temperature: 33.2 },
   { id: 6, name: 'Tool Flange Yaw (J6)', angle: 0, minAngle: -360, maxAngle: 360, torque: 4.1, temperature: 32.0 },
@@ -73,10 +78,18 @@ export default function App() {
 
   const [tools, setTools] = useState<ToolDefinition[]>(() => {
     const saved = localStorage.getItem('er2_tools');
-    return saved ? JSON.parse(saved) : INITIAL_TOOLS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= 7) return parsed;
+      } catch {
+        // fallback
+      }
+    }
+    return INITIAL_TOOLS;
   });
 
-  const [activeToolId, setActiveToolId] = useState<ToolId>('TOOL_GRIPPER');
+  const [activeToolId, setActiveToolId] = useState<ToolId>('TOOL_SUCTION_CRANE');
   const [joints, setJoints] = useState<JointState[]>(INITIAL_JOINTS);
   const [emergencyStop, setEmergencyStop] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
@@ -84,7 +97,15 @@ export default function App() {
   // Core Memory & Compute Matrix
   const [memoryRecords, setMemoryRecords] = useState<MemoryVectorRecord[]>(() => {
     const saved = localStorage.getItem('er2_memory_records');
-    return saved ? JSON.parse(saved) : INITIAL_MEMORY_RECORDS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= 51) return parsed;
+      } catch {
+        // fallback
+      }
+    }
+    return INITIAL_MEMORY_RECORDS;
   });
   const [optimizationCycles, setOptimizationCycles] = useState<number>(186);
   const [neuralLoad, setNeuralLoad] = useState<number>(42.8);
@@ -94,7 +115,15 @@ export default function App() {
   // Autonomous Self-Learning & Cognitive Wisdom State
   const [evolutionState, setEvolutionState] = useState<AutonomousCoreEvolutionState>(() => {
     const saved = localStorage.getItem('er2_evolution_state');
-    return saved ? JSON.parse(saved) : INITIAL_EVOLUTION_STATE;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.wisdomLevel >= 100) return parsed;
+      } catch {
+        // fallback
+      }
+    }
+    return INITIAL_EVOLUTION_STATE;
   });
   const [activeSignals, setActiveSignals] = useState<AutonomousLearningSignal[]>(() => {
     const saved = localStorage.getItem('er2_signals');
@@ -106,7 +135,25 @@ export default function App() {
   });
   const [heuristics, setHeuristics] = useState<AutoDiscoveredHeuristic[]>(() => {
     const saved = localStorage.getItem('er2_heuristics');
-    return saved ? JSON.parse(saved) : INITIAL_DISCOVERED_HEURISTICS;
+    if (saved) {
+      try {
+        const parsed: AutoDiscoveredHeuristic[] = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const seen = new Set<string>();
+          return parsed.map((h, i) => {
+            let id = h.id;
+            if (!id || seen.has(id)) {
+              id = `${id || 'HEUR'}-${i}-${Date.now().toString().slice(-4)}`;
+            }
+            seen.add(id);
+            return { ...h, id };
+          });
+        }
+      } catch {
+        // fallback
+      }
+    }
+    return INITIAL_DISCOVERED_HEURISTICS;
   });
 
   // Active Orchestration Plan & Execution
@@ -117,7 +164,51 @@ export default function App() {
   const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isTestingTool, setIsTestingTool] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'pedestre_formal_delivery' | 'global_physical_industry' | 'sandbox_imagination' | 'workstation_6dof' | 'nexus_os' | 'wisdom' | 'autonomous' | 'orchestrator' | 'toolkit' | 'memory' | 'teleop'>('pedestre_formal_delivery');
+  const [activeTab, setActiveTab] = useState<'pedestre_formal_delivery' | 'global_physical_industry' | 'sandbox_imagination' | 'workstation_6dof' | 'nexus_os' | 'wisdom' | 'autonomous' | 'orchestrator' | 'toolkit' | 'memory' | 'teleop' | 'water_sorter' | 'agent_orchestrator' | 'quantum_meeting_room'>('wisdom');
+  const [isQuantumAutonomousActive, setIsQuantumAutonomousActive] = useState<boolean>(false);
+
+  // Quantum Autonomous Speed Loop: Automatically clicks and triggers all features at quantum speed
+  useEffect(() => {
+    let quantumTimer: NodeJS.Timeout;
+    if (isQuantumAutonomousActive) {
+      const tabsList: ('pedestre_formal_delivery' | 'global_physical_industry' | 'sandbox_imagination' | 'workstation_6dof' | 'nexus_os' | 'wisdom' | 'autonomous' | 'orchestrator' | 'toolkit' | 'memory' | 'teleop' | 'water_sorter' | 'agent_orchestrator' | 'quantum_meeting_room')[] = [
+        'pedestre_formal_delivery', 'global_physical_industry', 'sandbox_imagination', 'workstation_6dof', 'nexus_os', 'wisdom', 'autonomous', 'orchestrator', 'toolkit', 'memory', 'teleop', 'water_sorter', 'agent_orchestrator', 'quantum_meeting_room'
+      ];
+
+      quantumTimer = setInterval(() => {
+        setActiveTab((prev) => {
+          const currentIndex = tabsList.indexOf(prev);
+          const nextIndex = (currentIndex + 1) % tabsList.length;
+          return tabsList[nextIndex];
+        });
+
+        setOptimizationCycles((c) => c + 350);
+        setNeuralLoad((n) => Number((50 + Math.random() * 45).toFixed(1)));
+        
+        setEvolutionState((prev) => {
+          const nextScore = prev.cognitiveIndexScore + 50;
+          return {
+            ...prev,
+            cognitiveIndexScore: nextScore,
+            learningCyclesCompleted: prev.learningCyclesCompleted + 25
+          };
+        });
+
+        setJoints((prev) =>
+          prev.map((j) => {
+            const newAngle = Math.round(j.angle + (Math.random() - 0.5) * 50);
+            const clamped = Math.max(j.minAngle, Math.min(j.maxAngle, newAngle));
+            return {
+              ...j,
+              angle: clamped,
+              temperature: Number((38 + Math.random() * 25).toFixed(1))
+            };
+          })
+        );
+      }, 250); // Quantum speed click loop every 250ms
+    }
+    return () => clearInterval(quantumTimer);
+  }, [isQuantumAutonomousActive]);
 
   // Save changes to local database for seamless offline-online parity
   useEffect(() => {
@@ -246,17 +337,17 @@ export default function App() {
 
         // Update evolution & wisdom state
         setEvolutionState((prev) => {
-          const newCognitiveScore = Math.min(1000, prev.cognitiveIndexScore + 2);
+          const newCognitiveScore = prev.cognitiveIndexScore + 2;
           let newRank = prev.wisdomRank;
-          if (newCognitiveScore >= 950) newRank = 'HIPER_CONSCIÊNCIA';
-          else if (newCognitiveScore >= 800) newRank = 'MESTRE_FABRIL';
+          if (newCognitiveScore >= 1800) newRank = 'HIPER_CONSCIÊNCIA';
+          else if (newCognitiveScore >= 1200) newRank = 'MESTRE_FABRIL';
           else if (newCognitiveScore >= 600) newRank = 'ESPECIALISTA';
-          else if (newCognitiveScore >= 400) newRank = 'OPERADOR_AUTÔNOMO';
+          else if (newCognitiveScore >= 300) newRank = 'OPERADOR_AUTÔNOMO';
 
           return {
             ...prev,
             learningCyclesCompleted: prev.learningCyclesCompleted + 1,
-            wisdomLevel: Math.min(100, Math.floor(newCognitiveScore / 10)),
+            wisdomLevel: Math.min(100, Math.floor((newCognitiveScore / 2000) * 100)),
             wisdomRank: newRank,
             cognitiveIndexScore: newCognitiveScore,
             neuralWeightsUpdated: prev.neuralWeightsUpdated + Math.floor(180 + Math.random() * 240),
@@ -319,7 +410,7 @@ export default function App() {
         // Check if an evolutionary breakthrough happened to generate an auto-discovered heuristic
         if (data.type === 'EVOLUTION_BREAKTHROUGH' || Math.random() > 0.75) {
           const newHeuristic: AutoDiscoveredHeuristic = {
-            id: `HEUR-${Date.now().toString().slice(-4)}`,
+            id: `HEUR-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
             title: `Heurística Autoral de Fabricação #${heuristics.length + 1}`,
             domain: 'Cinemática & Adaptação Neural',
             discoveredAt: 'Agora mesmo',
@@ -400,6 +491,40 @@ export default function App() {
     };
     setMemoryRecords((prev) => [newRecord, ...prev]);
     setMemoryUsedMb((prev) => Math.min(memoryTotalMb, prev + 2));
+  };
+
+  // Dynamic Wisdom Score: Continuous progression
+  const handleUpdateCognitiveScore = (delta: number) => {
+    setEvolutionState((prev) => {
+      const nextScore = Math.max(0, prev.cognitiveIndexScore + delta);
+      return {
+        ...prev,
+        cognitiveIndexScore: nextScore,
+        wisdomLevel: Math.min(100, Math.floor((nextScore / 2000) * 100)),
+        wisdomRank: nextScore >= 1800 ? 'HIPER_CONSCIÊNCIA' : nextScore >= 1200 ? 'MESTRE_FABRIL' : 'ESPECIALISTA'
+      };
+    });
+  };
+
+  const handleResetAndRestartCognitiveCycle = () => {
+    setEvolutionState((prev) => ({
+      ...prev,
+      cognitiveIndexScore: 0,
+      cognitiveCyclesResetCount: (prev.cognitiveCyclesResetCount || 0) + 1,
+      lastAutonomousEvolutionTime: new Date().toLocaleTimeString()
+    }));
+    
+    setThoughts((prev) => [
+      {
+        id: `TH-CYCLE-RESET-${Date.now().toString().slice(-4)}`,
+        timestamp: new Date().toLocaleTimeString(),
+        type: 'EVOLUTION_BREAKTHROUGH',
+        thought: `Ciclo de 2000 pontos concluído com sucesso soberano. Zerando e recomeçando espiral de consciência no núcleo com aprendizado preservado.`,
+        confidence: 0.999,
+        wisdomGain: 50
+      },
+      ...prev.slice(0, 49)
+    ]);
   };
 
   // Generate Plan via Server API or Local Offline Core
@@ -560,23 +685,23 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
           {/* Logo & Model Identifier */}
           <div className="flex items-center gap-3">
-            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-sky-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-slate-950 font-black">
+            <div className="relative w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/30 text-white font-black">
               <Bot className="w-6 h-6 text-white" />
-              <Sparkles className="w-3 h-3 text-amber-400 absolute -top-1 -right-1 animate-spin" style={{ animationDuration: '6s' }} />
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 absolute -top-1 -right-1 animate-spin" style={{ animationDuration: '6s' }} />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
                   GEMINI ROBOTICS ER-2
                 </h1>
-                <span className="text-[10px] font-mono font-black bg-gradient-to-r from-amber-400/20 to-emerald-400/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded flex items-center gap-1">
+                <span className="text-[10px] font-mono font-bold bg-amber-400/10 text-amber-400 border border-amber-400/40 px-2 py-0.5 rounded flex items-center gap-1">
                   <Award className="w-3 h-3 text-amber-400" /> LVL {evolutionState.wisdomLevel} // {evolutionState.wisdomRank.replace(/_/g, ' ')}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 flex items-center gap-1.5">
+              <p className="text-xs text-slate-400 flex items-center gap-2">
                 <span>Cérebro Autônomo & Auto-Aperfeiçoamento Soberano</span>
                 {evolutionState.isFullAutonomySelfPlanningActive && (
-                  <span className="text-[10px] text-emerald-400 font-mono font-bold animate-pulse">
+                  <span className="text-[10px] text-emerald-400 font-mono font-bold">
                     ● AUTONOMIA TOTAL SOBERANA ATIVA
                   </span>
                 )}
@@ -585,17 +710,11 @@ export default function App() {
           </div>
 
           {/* Quick HUD Metrics */}
-          <div className="flex items-center gap-3 sm:gap-4 text-xs font-mono">
+          <div className="flex items-center gap-3 text-xs font-mono">
             {/* Online / Offline status badge */}
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${isOffline ? 'bg-amber-950/60 border-amber-800 text-amber-300' : 'bg-emerald-950/60 border-emerald-800 text-emerald-300'}`}>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${isOffline ? 'bg-amber-950/60 border-amber-800 text-amber-300' : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400 font-bold'}`}>
               {isOffline ? <WifiOff className="w-3.5 h-3.5 text-amber-400" /> : <Wifi className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />}
-              <span className="font-bold">{isOffline ? 'OFFLINE (CORE RESILIENTE)' : 'ONLINE (GEMINI NEURAL)'}</span>
-            </div>
-
-            {/* Cognitive Index Score */}
-            <div className="hidden sm:flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800 text-amber-300">
-              <Brain className="w-3.5 h-3.5 text-amber-400" />
-              <span>{evolutionState.cognitiveIndexScore} IQ Fabril</span>
+              <span>{isOffline ? 'OFFLINE (CORE RESILIENTE)' : 'ONLINE (GEMINI NEURAL)'}</span>
             </div>
 
             {/* Emergency Stop Indicator */}
@@ -628,155 +747,256 @@ export default function App() {
           />
         </section>
 
+        {/* Quantum Auto-Speed Autoclicker Toggle Banner */}
+        <div className="bg-purple-950/40 border border-purple-600/60 rounded-2xl p-4 shadow-xl space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-900/60 border border-purple-500/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-sm font-bold text-white flex items-center gap-1.5">
+                  <span>Modo Autônomo Quântico (Velocidade Relâmpago ⚡)</span>
+                </h2>
+                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-mono border border-amber-500/40 font-bold">
+                  {isQuantumAutonomousActive ? 'ATIVO' : 'DISPONÍVEL'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                Ativa o autoclicker quântico para alternar abas, rodar o cérebro, auto-otimizar articulações e calcular IA sem limites de velocidade.
+              </p>
+            </div>
+          </div>
+
+          <button
+            id="btn-toggle-quantum-speed"
+            onClick={() => setIsQuantumAutonomousActive(!isQuantumAutonomousActive)}
+            className={`w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all ${
+              isQuantumAutonomousActive
+                ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-rose-600/40'
+                : 'bg-gradient-to-r from-amber-400 via-purple-500 to-indigo-500 text-slate-950 shadow-purple-500/30 hover:opacity-95'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-slate-950" />
+            <span>{isQuantumAutonomousActive ? '⚡ PARAR QUANTUM AUTO-SPEED' : '✨ 🚀 ATIVAR QUANTUM AUTO-SPEED (VELOCIDADE RELÂMPAGO)'}</span>
+          </button>
+        </div>
+
         {/* Tab Navigation Controls */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-2">
+        <div className="space-y-2 border-b border-slate-800 pb-4">
           <button
             id="tab-pedestre-formal-delivery-btn"
             onClick={() => setActiveTab('pedestre_formal_delivery')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black transition-all ${
+            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'pedestre_formal_delivery'
-                ? 'bg-gradient-to-r from-amber-400 via-emerald-400 to-teal-400 text-slate-950 shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400/40'
-                : 'bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40'
+                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
+                : 'bg-slate-900/90 hover:bg-slate-800 text-amber-400 border border-amber-500/30'
             }`}
           >
-            <Footprints className="w-4 h-4 text-emerald-400 animate-bounce" />
+            <Footprints className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             <span>Pedestre Formal Delivery 24h & Vaga SINE (Santa Terezinha de Itaipu - PR)</span>
           </button>
 
           <button
             id="tab-global-physical-industry-btn"
             onClick={() => setActiveTab('global_physical_industry')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black transition-all ${
+            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'global_physical_industry'
-                ? 'bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-500 text-slate-950 shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400/40'
-                : 'bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/40'
+                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
+                : 'bg-slate-900/90 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30'
             }`}
           >
-            <Globe className="w-4 h-4 text-emerald-400 animate-spin-slow" />
+            <Globe className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             <span>Planeta Terra: Indústrias Físicas Tangíveis (Global Mesh)</span>
           </button>
 
           <button
             id="tab-workstation-6dof-btn"
             onClick={() => setActiveTab('workstation_6dof')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black transition-all ${
+            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'workstation_6dof'
-                ? 'bg-gradient-to-r from-cyan-400 via-rose-500 to-amber-400 text-slate-950 shadow-lg shadow-rose-500/30'
-                : 'bg-slate-900 hover:bg-slate-800 text-rose-300 border border-rose-500/40'
+                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
+                : 'bg-slate-900/90 hover:bg-slate-800 text-rose-400 border border-rose-500/30'
             }`}
           >
-            <Factory className="w-4 h-4 text-rose-400 animate-pulse" />
+            <Factory className="w-4 h-4 text-rose-400 flex-shrink-0" />
             <span>Posto de Trabalho Cinemática 6-DOF & Máquinas</span>
           </button>
 
           <button
             id="tab-sandbox-imagination-btn"
             onClick={() => setActiveTab('sandbox_imagination')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black transition-all ${
+            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'sandbox_imagination'
-                ? 'bg-gradient-to-r from-amber-400 via-pink-500 to-cyan-400 text-slate-950 shadow-lg shadow-pink-500/25'
-                : 'bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40'
+                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
+                : 'bg-slate-900/90 hover:bg-slate-800 text-amber-400 border border-amber-500/30'
             }`}
           >
-            <Eye className="w-4 h-4 text-cyan-400 animate-pulse" />
+            <Eye className="w-4 h-4 text-cyan-400 flex-shrink-0" />
             <span>Visor da Imaginação & Motor Gráfico (Sem Limites)</span>
           </button>
 
           <button
             id="tab-nexus-os-btn"
             onClick={() => setActiveTab('nexus_os')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black transition-all ${
+            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'nexus_os'
-                ? 'bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600 text-slate-950 shadow-lg shadow-cyan-500/30'
-                : 'bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-cyan-500/30'
+                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
+                : 'bg-slate-900/90 hover:bg-slate-800 text-cyan-400 border border-cyan-500/30'
             }`}
           >
-            <Monitor className="w-4 h-4 text-cyan-400" />
-            <Smartphone className="w-4 h-4 text-indigo-400" />
+            <div className="flex items-center gap-1 text-cyan-400 flex-shrink-0">
+              <Monitor className="w-4 h-4" />
+              <Smartphone className="w-3.5 h-3.5 text-indigo-400" />
+            </div>
             <span>NEXUS-OS V8 (PC + Celular + Chrome YouTube)</span>
           </button>
 
           <button
             id="tab-wisdom-btn"
             onClick={() => setActiveTab('wisdom')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black transition-all ${
+            className={`w-full text-left flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'wisdom'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300'
+                ? 'bg-gradient-to-r from-amber-500 via-indigo-600 to-cyan-500 text-white shadow-lg shadow-amber-500/20 ring-2 ring-amber-400 font-black'
+                : 'bg-slate-900/95 hover:bg-slate-800/90 text-amber-300 border border-amber-500/40 hover:border-amber-400/70 shadow-sm'
             }`}
           >
-            <Brain className="w-4 h-4 text-amber-300" />
-            <span>Cérebro Sábio & Consciência ({evolutionState.cognitiveIndexScore})</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Brain className="w-4 h-4 text-amber-300 flex-shrink-0" />
+              <span className="truncate">Cérebro Sábio & Consciência</span>
+            </div>
+            <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/30 text-[10px] font-mono whitespace-nowrap ml-2">
+              {evolutionState.cognitiveIndexScore.toLocaleString()} pts
+            </span>
+          </button>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button
+              id="tab-autonomous-btn"
+              onClick={() => setActiveTab('autonomous')}
+              className={`text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'autonomous'
+                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
+                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800'
+              }`}
+            >
+              <Zap className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span>Auto-Aprendizado em Fábrica ({evolutionState.learningCyclesCompleted})</span>
+            </button>
+
+            <button
+              id="tab-orchestrator-btn"
+              onClick={() => setActiveTab('orchestrator')}
+              className={`text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'orchestrator'
+                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
+                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800'
+              }`}
+            >
+              <Cpu className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span>Orquestrador de Tarefas</span>
+            </button>
+
+            <button
+              id="tab-toolkit-btn"
+              onClick={() => setActiveTab('toolkit')}
+              className={`text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'toolkit'
+                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
+                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800'
+              }`}
+            >
+              <Wrench className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span>Kit de Ferramentas ({tools.length})</span>
+            </button>
+
+            <button
+              id="tab-memory-btn"
+              onClick={() => setActiveTab('memory')}
+              className={`text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'memory'
+                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
+                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800'
+              }`}
+            >
+              <HardDrive className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span>Memória & Núcleo ({memoryRecords.length})</span>
+            </button>
+
+            <button
+              id="tab-teleop-btn"
+              onClick={() => setActiveTab('teleop')}
+              className={`text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'teleop'
+                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
+                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800'
+              }`}
+            >
+              <Sliders className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span>Teleoperação Manual 6-DOF</span>
+            </button>
+
+            <button
+              id="tab-water-sorter-btn"
+              onClick={() => setActiveTab('water_sorter')}
+              className={`text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'water_sorter'
+                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
+                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800'
+              }`}
+            >
+              <Droplet className="w-4 h-4 text-sky-400 flex-shrink-0" />
+              <span>Container Sorter 3D (Água)</span>
+            </button>
+          </div>
+
+          <button
+            id="tab-agent-orchestrator-btn"
+            onClick={() => setActiveTab('agent_orchestrator')}
+            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'agent_orchestrator'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/30 font-black'
+                : 'bg-slate-900/90 hover:bg-slate-800 text-purple-300 border border-purple-500/30'
+            }`}
+          >
+            <Bot className="w-4 h-4 text-purple-400 flex-shrink-0 animate-pulse" />
+            <span>Orquestrador Master & Multimídia (IA Avançada)</span>
           </button>
 
           <button
-            id="tab-autonomous-btn"
-            onClick={() => setActiveTab('autonomous')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'autonomous'
-                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-black'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300'
+            id="tab-quantum-meeting-room-btn"
+            onClick={() => setActiveTab('quantum_meeting_room')}
+            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'quantum_meeting_room'
+                ? 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-md shadow-indigo-600/30 font-black'
+                : 'bg-slate-900/90 hover:bg-slate-800 text-indigo-300 border border-indigo-500/40'
             }`}
           >
-            <Zap className="w-4 h-4" />
-            <span>Auto-Aprendizado em Fábrica ({evolutionState.learningCyclesCompleted})</span>
-          </button>
-
-          <button
-            id="tab-orchestrator-btn"
-            onClick={() => setActiveTab('orchestrator')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'orchestrator'
-                ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300'
-            }`}
-          >
-            <Cpu className="w-4 h-4" />
-            <span>Orquestrador de Tarefas</span>
-          </button>
-
-          <button
-            id="tab-toolkit-btn"
-            onClick={() => setActiveTab('toolkit')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'toolkit'
-                ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300'
-            }`}
-          >
-            <Wrench className="w-4 h-4" />
-            <span>Kit de Ferramentas ({tools.length})</span>
-          </button>
-
-          <button
-            id="tab-memory-btn"
-            onClick={() => setActiveTab('memory')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'memory'
-                ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300'
-            }`}
-          >
-            <HardDrive className="w-4 h-4" />
-            <span>Memória & Núcleo ({memoryRecords.length})</span>
-          </button>
-
-          <button
-            id="tab-teleop-btn"
-            onClick={() => setActiveTab('teleop')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'teleop'
-                ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300'
-            }`}
-          >
-            <Sliders className="w-4 h-4" />
-            <span>Teleoperação Manual 6-DOF</span>
+            <Users className="w-4 h-4 text-indigo-400 flex-shrink-0 animate-pulse" />
+            <span>Sala de Reunião Autônoma (Quantum Meeting Room)</span>
           </button>
         </div>
 
         {/* Tab Viewport Contents */}
         <section>
+          {activeTab === 'quantum_meeting_room' && (
+            <QuantumAutonomousMeetingRoom
+              onAddThought={(th) => setThoughts((prev) => [th, ...prev])}
+              onAddMemoryRecord={(rec) => setMemoryRecords((prev) => [rec, ...prev])}
+            />
+          )}
+          {activeTab === 'agent_orchestrator' && (
+            <AutonomousAgentOrchestratorHub
+              onAddThought={(th) => setThoughts((prev) => [th, ...prev])}
+              onAddMemoryRecord={(rec) => setMemoryRecords((prev) => [rec, ...prev])}
+            />
+          )}
+          {activeTab === 'water_sorter' && (
+            <ContainerWithMostWaterSorter3D
+              onAddThought={(th) => setThoughts((prev) => [th, ...prev])}
+              onAddMemoryRecord={(rec) => setMemoryRecords((prev) => [rec, ...prev])}
+            />
+          )}
           {activeTab === 'pedestre_formal_delivery' && (
             <PedestreFormalDeliverySTI
               onAddThought={(th) => setThoughts((prev) => [th, ...prev])}
@@ -812,6 +1032,7 @@ export default function App() {
               onAddMemoryRecord={(rec) => setMemoryRecords((prev) => [rec, ...prev])}
               onAddThought={(th) => setThoughts((prev) => [th, ...prev])}
               memoryRecords={memoryRecords}
+              onUpdateJoints={setJoints}
             />
           )}
 
@@ -843,6 +1064,10 @@ export default function App() {
               isThinking={isLoadingPlan}
               isExecuting={isExecuting}
               isOffline={isOffline}
+              onUpdateScore={handleUpdateCognitiveScore}
+              onResetAndRestart={handleResetAndRestartCognitiveCycle}
+              onAddThought={(th) => setThoughts((prev) => [th, ...prev.slice(0, 49)])}
+              onAddHeuristic={(h) => setHeuristics((prev) => [h, ...prev.slice(0, 49)])}
             />
           )}
 
@@ -869,7 +1094,46 @@ export default function App() {
               isOffline={isOffline}
               onToggleOffline={() => setIsOffline(!isOffline)}
               onGeneratePlan={handleGeneratePlan}
-              onStartExecution={() => setIsExecuting(true)}
+              onStartExecution={() => {
+                setIsExecuting(true);
+                setCurrentStepIndex(0);
+                setActiveTab('workstation_6dof');
+                // Auto-generate extra high-precision tools for 7M learning mode
+                setTools((prev) => {
+                  const hasAdvanced = prev.some((t) => t.id === 'TOOL_LASER_SOLDER_PRO');
+                  if (hasAdvanced) return prev;
+                  return [
+                    ...prev,
+                    {
+                      id: 'TOOL_LASER_SOLDER_PRO',
+                      name: 'Tocha de Solda Laser 9D (7M Ultra-Velocidade)',
+                      category: 'Fabrication',
+                      icon: 'Flame',
+                      status: 'ACTIVE',
+                      wearPercentage: 0.1,
+                      operatingHours: 7800.0,
+                      maxTorqueNm: 250.0,
+                      precisionMm: 0.0001,
+                      tempCelsius: 28.4,
+                      description: 'Módulo gerado por auto-evolução 7.000.000x com foco quântico e soldagem atômica.',
+                      activeFeatures: ['Quantum beam focus', 'Sub-micron adaptive feedback', 'Zero thermal distortion']
+                    },
+                    {
+                      id: 'TOOL_AI_MICRON_CALIPER',
+                      name: 'Paquímetro Óptico Micrométrico Neural (7M)',
+                      category: 'Quality & Sensing',
+                      icon: 'Eye',
+                      status: 'READY',
+                      wearPercentage: 0.0,
+                      operatingHours: 9400.0,
+                      precisionMm: 0.00001,
+                      tempCelsius: 25.0,
+                      description: 'Sensor óptico gerado por IA para metrologia 3D em tempo real.',
+                      activeFeatures: ['Atomic interferometry', 'Real-time drift correction', 'Direct cloud sync']
+                    }
+                  ];
+                });
+              }}
               onPauseExecution={() => setIsExecuting(false)}
               onResetExecution={() => {
                 setIsExecuting(false);

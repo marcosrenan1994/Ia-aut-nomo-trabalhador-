@@ -193,10 +193,10 @@ export const AutonomousLearningMatrix: React.FC<AutonomousLearningMatrixProps> =
           </div>
 
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-            {activeSignals.map((signal) => (
+            {activeSignals.map((signal, idx) => (
               <div
-                key={signal.id}
-                id={`signal-card-${signal.id}`}
+                key={`${signal.id}-${idx}`}
+                id={`signal-card-${signal.id}-${idx}`}
                 className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800/80 text-xs space-y-1"
               >
                 <div className="flex items-center justify-between">
