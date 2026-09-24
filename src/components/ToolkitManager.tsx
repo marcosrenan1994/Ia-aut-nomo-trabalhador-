@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ToolDefinition, ToolId } from '../types';
 import { 
   Flame, 
@@ -11,7 +11,9 @@ import {
   RotateCw, 
   Thermometer, 
   Activity, 
-  Zap 
+  Zap,
+  Minimize2,
+  Maximize2
 } from 'lucide-react';
 
 interface ToolkitManagerProps {
@@ -27,6 +29,7 @@ export const ToolkitManager: React.FC<ToolkitManagerProps> = ({
   onSelectTool,
   onCalibrateTool
 }) => {
+  const [isMinimized, setIsMinimized] = useState<boolean>(false);
   const getIcon = (id: ToolId) => {
     switch (id) {
       case 'TOOL_GRIPPER':
@@ -42,6 +45,58 @@ export const ToolkitManager: React.FC<ToolkitManagerProps> = ({
     }
   };
 
+  if (isMinimized) {
+    const activeTool = tools.find(t => t.id === activeToolId);
+    return (
+      <div id="toolkit-manager-module" className="bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-lg mb-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="p-2 rounded-lg bg-sky-500/20 text-sky-400 shrink-0">
+            {getIcon(activeToolId)}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-white truncate">
+                Ferramenta: <span className="text-sky-300">{activeTool?.name}</span>
+              </span>
+              <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.2 rounded border border-emerald-500/30">
+                Acoplado
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 truncate hidden sm:block">{activeTool?.description}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 overflow-x-auto max-w-[200px] sm:max-w-none">
+            {tools.map(t => (
+              <button
+                key={t.id}
+                onClick={() => onSelectTool(t.id)}
+                className={`p-1.5 rounded-lg border text-[10px] font-bold transition-all ${
+                  t.id === activeToolId
+                    ? 'bg-sky-500 text-slate-950 border-sky-400'
+                    : 'bg-slate-800 text-slate-400 hover:text-white border-slate-700'
+                }`}
+                title={t.name}
+              >
+                {t.id.replace('TOOL_', '')}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setIsMinimized(false)}
+            className="p-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 flex items-center gap-1 text-[10px] font-bold"
+            title="Expandir Kit de Ferramentas"
+          >
+            <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">Expandir Kit</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div id="toolkit-manager-module" className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-xl">
       <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
@@ -54,9 +109,19 @@ export const ToolkitManager: React.FC<ToolkitManagerProps> = ({
             Troca rápida automática, calibração dinâmica e monitoramento de desgaste de ferramental
           </p>
         </div>
-        <span className="text-xs font-mono bg-sky-500/10 text-sky-400 px-2.5 py-1 rounded border border-sky-500/20">
-          5 / 5 Acopladores Prontos
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono bg-sky-500/10 text-sky-400 px-2.5 py-1 rounded border border-sky-500/20">
+            5 / 5 Acopladores Prontos
+          </span>
+          <button
+            onClick={() => setIsMinimized(true)}
+            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 flex items-center gap-1 text-xs"
+            title="Minimalizar Kit de Ferramentas"
+          >
+            <Minimize2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline text-[11px]">Minimalizar Kit</span>
+          </button>
+        </div>
       </div>
 
       {/* Toolkit Cards Grid */}

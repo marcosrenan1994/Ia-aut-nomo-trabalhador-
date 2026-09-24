@@ -1,6 +1,6 @@
 {
   "name": "NEXUS-OS V8 & Gemini Robotics ER-2",
-  "description": "Plataforma robótica Gemini Robotics ER-2 com Wise Quantum Bank Multi-Moedas, Funcionários Autônomos de Velocidade Quântica, Transição Robótica (robôs lavradores e carroças autônomas solares), Deflação de Alimentos, Supermercado Universal (da farinha a espaçonaves) e Cofre com R$ 1,00 Rendendo.",
-  "requestFramePermissions": ["camera", "microphone"],
+  "description": "Salomão - Inteligência Autônoma com Conversador Live Vertical por Vídeo, Áudio e Imagem, Extensão Corporal Auto-Clicadora Pensante para Celular, Playground de Areia 6-DOF e Reuniões de IAs.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="brainGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="50%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#bg)" />
+  <circle cx="256" cy="256" r="180" stroke="url(#brainGlow)" stroke-width="8" fill="none" opacity="0.4" stroke-dasharray="12 12"/>
+  <path d="M256 120 C200 120 160 160 160 210 C160 230 170 250 185 265 C175 280 170 300 170 320 C170 360 205 392 250 392 C253 392 256 392 256 392 C256 392 259 392 262 392 C307 392 342 360 342 320 C342 300 337 280 327 265 C342 250 352 230 352 210 C352 160 312 120 256 120 Z" fill="url(#brainGlow)"/>
+  <path d="M256 120 L256 392" stroke="#ffffff" stroke-width="4" opacity="0.6"/>
+  <circle cx="210" cy="220" r="14" fill="#ffffff" />
+  <circle cx="302" cy="220" r="14" fill="#ffffff" />
+  <circle cx="256" cy="300" r="10" fill="#38bdf8" />
+</svg>

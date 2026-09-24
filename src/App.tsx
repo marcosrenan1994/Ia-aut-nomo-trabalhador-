@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   ToolDefinition, 
   ToolId, 
@@ -34,6 +34,17 @@ import { ContainerWithMostWaterSorter3D } from './components/ContainerWithMostWa
 import { AutonomousAgentOrchestratorHub } from './components/AutonomousAgentOrchestratorHub';
 import { QuantumAutonomousMeetingRoom } from './components/QuantumAutonomousMeetingRoom';
 import { WiseQuantumBank } from './components/WiseQuantumBank';
+import { RealAutonomousVisionAgent } from './components/RealAutonomousVisionAgent';
+import { AutonomousAutoClickerEngine, AutoClickTarget } from './components/AutonomousAutoClickerEngine';
+import { AutonomousWorkerAgencyHub } from './components/AutonomousWorkerAgencyHub';
+import { BinanceTestnetTradingBot } from './components/BinanceTestnetTradingBot';
+import { IntellectualVaultHub } from './components/IntellectualVaultHub';
+import { OrchestratorSandPlayground } from './components/OrchestratorSandPlayground';
+import { SalomaoOrchestratorRunBar } from './components/SalomaoOrchestratorRunBar';
+import { SalomaoLiveConversationalPanel } from './components/SalomaoLiveConversationalPanel';
+import { SalomaoActionLog, ActionLogItem, generateSalomaoReasonForTarget } from './components/SalomaoActionLog';
+import { SalomaoMobileAccessibilityBrain } from './components/SalomaoMobileAccessibilityBrain';
+import { SalomaoDownloadModal } from './components/SalomaoDownloadModal';
 import { 
   Bot, 
   Cpu, 
@@ -59,8 +70,43 @@ import {
   UserCheck,
   Droplet,
   Users,
-  Building2
+  Building2,
+  Camera,
+  Crosshair,
+  Menu,
+  X,
+  MousePointer2,
+  Briefcase,
+  TrendingUp,
+  ArrowLeft,
+  Flame,
+  Radio,
+  Download
 } from 'lucide-react';
+
+const TAB_METADATA: Record<string, { title: string; category: string; tool: ToolId }> = {
+  worker_agency: { title: 'Agência do Trabalhador & Chrome', category: 'Recrutamento & Scraping DOM', tool: 'TOOL_FASTENER' },
+  binance_bot: { title: 'Robô Trading Binance Testnet', category: 'Finanças & Futuros Cripto', tool: 'TOOL_VISION_INSPECTOR' },
+  real_vision_agent: { title: 'Câmera Real Multimodal & ReAct', category: 'Percepção Visual & Ações', tool: 'TOOL_VISION_INSPECTOR' },
+  orchestrator_sand_playground: { title: 'Playground 6-DOF & Areia Quântica', category: 'Cinemática & Geração de Arte', tool: 'TOOL_DISPENSER' },
+  intellectual_vault: { title: 'Painel Virtual Intelectual', category: 'Super-Matriz Cognitiva', tool: 'TOOL_GRIPPER' },
+  wise_quantum_bank: { title: 'Wise Quantum Bank & Alimentos', category: 'Economia Quântica', tool: 'TOOL_SUCTION_CRANE' },
+  quantum_meeting_room: { title: 'Sala de Reuniões Autônoma de IAs', category: 'Consenso & Meta-Planejamento', tool: 'TOOL_GRIPPER' },
+  agent_orchestrator: { title: 'Orquestrador de Agentes Autônomos', category: 'Coordenação Sistêmica', tool: 'TOOL_FASTENER' },
+  water_sorter: { title: 'Classificador 3D de Água', category: 'Otimização Espacial', tool: 'TOOL_DISPENSER' },
+  pedestre_formal_delivery: { title: 'Pedestre Formal Delivery STI', category: 'Logística Tangível', tool: 'TOOL_SUCTION_CRANE' },
+  global_physical_industry: { title: 'Indústrias Físicas Tangíveis', category: 'Manufatura & Automação', tool: 'TOOL_WELDER' },
+  workstation_6dof: { title: 'Bancada Robótica 6-DOF', category: 'Hardware & Cinemática', tool: 'TOOL_DEBURRING' },
+  sandbox_imagination: { title: 'Sandbox de Imaginação', category: 'Simulação Quântica', tool: 'TOOL_DISPENSER' },
+  nexus_os: { title: 'Ecossistema Unificado Salomão', category: 'Kernel Soberano', tool: 'TOOL_GRIPPER' },
+  wisdom: { title: 'Cérebro Sábio & Consciência Reflexiva', category: 'Meta-Cognição', tool: 'TOOL_VISION_INSPECTOR' },
+  autonomous: { title: 'Auto-Aprendizado Fabril', category: 'Machine Learning', tool: 'TOOL_FASTENER' },
+  orchestrator: { title: 'Orquestrador de Ferramentas', category: 'Execução de Rotinas', tool: 'TOOL_GRIPPER' },
+  toolkit: { title: 'Gerenciador de Kit de Ferramentas', category: 'Atuadores e Sensores', tool: 'TOOL_WELDER' },
+  memory: { title: 'Memória Vetorial & Computação', category: 'Bancos Vetoriais', tool: 'TOOL_SUCTION_CRANE' },
+  teleop: { title: 'Teleoperação Manual 6-DOF', category: 'Controle de Articulações', tool: 'TOOL_DEBURRING' },
+  salomao_mobile_brain: { title: 'Salomão no Celular: Cérebro Vitalício & Cursor de Acessibilidade', category: 'Mobile & Acessibilidade', tool: 'TOOL_FASTENER' }
+};
 
 const INITIAL_JOINTS: JointState[] = [
   { id: 1, name: 'Base Yaw (J1)', angle: 122, minAngle: -170, maxAngle: 170, torque: 12.4, temperature: 36.5 },
@@ -166,50 +212,171 @@ export default function App() {
   const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isTestingTool, setIsTestingTool] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'wise_quantum_bank' | 'pedestre_formal_delivery' | 'global_physical_industry' | 'sandbox_imagination' | 'workstation_6dof' | 'nexus_os' | 'wisdom' | 'autonomous' | 'orchestrator' | 'toolkit' | 'memory' | 'teleop' | 'water_sorter' | 'agent_orchestrator' | 'quantum_meeting_room'>('wise_quantum_bank');
+  const [activeTab, setActiveTab] = useState<
+    | 'worker_agency' 
+    | 'binance_bot' 
+    | 'real_vision_agent' 
+    | 'orchestrator_sand_playground'
+    | 'intellectual_vault'
+    | 'wise_quantum_bank' 
+    | 'pedestre_formal_delivery' 
+    | 'global_physical_industry' 
+    | 'sandbox_imagination' 
+    | 'workstation_6dof' 
+    | 'nexus_os' 
+    | 'wisdom' 
+    | 'autonomous' 
+    | 'orchestrator' 
+    | 'toolkit' 
+    | 'memory' 
+    | 'teleop' 
+    | 'water_sorter' 
+    | 'agent_orchestrator' 
+    | 'quantum_meeting_room'
+    | 'salomao_mobile_brain'
+  >('worker_agency');
   const [isQuantumAutonomousActive, setIsQuantumAutonomousActive] = useState<boolean>(false);
+  const [externalAutoClickTarget, setExternalAutoClickTarget] = useState<AutoClickTarget | null>(null);
+  const [isSalomaoLiveOpen, setIsSalomaoLiveOpen] = useState<boolean>(false);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState<boolean>(false);
+  const [runningOrchestrators, setRunningOrchestrators] = useState<Record<string, boolean>>({
+    worker_agency: true,
+    binance_bot: true,
+    real_vision_agent: true,
+    orchestrator_sand_playground: true,
+    wise_quantum_bank: true,
+    quantum_meeting_room: true,
+    pedestre_formal_delivery: true,
+    global_physical_industry: true,
+    workstation_6dof: true,
+    sandbox_imagination: true,
+    nexus_os: true,
+    wisdom: true
+  });
 
-  // Quantum Autonomous Speed Loop: Automatically clicks and triggers all features at quantum speed
-  useEffect(() => {
-    let quantumTimer: NodeJS.Timeout;
-    if (isQuantumAutonomousActive) {
-      const tabsList: ('wise_quantum_bank' | 'pedestre_formal_delivery' | 'global_physical_industry' | 'sandbox_imagination' | 'workstation_6dof' | 'nexus_os' | 'wisdom' | 'autonomous' | 'orchestrator' | 'toolkit' | 'memory' | 'teleop' | 'water_sorter' | 'agent_orchestrator' | 'quantum_meeting_room')[] = [
-        'wise_quantum_bank', 'pedestre_formal_delivery', 'global_physical_industry', 'sandbox_imagination', 'workstation_6dof', 'nexus_os', 'wisdom', 'autonomous', 'orchestrator', 'toolkit', 'memory', 'teleop', 'water_sorter', 'agent_orchestrator', 'quantum_meeting_room'
-      ];
+  const handleToggleOrchestrator = (tabId: string) => {
+    setRunningOrchestrators(prev => ({
+      ...prev,
+      [tabId]: !prev[tabId]
+    }));
+  };
 
-      quantumTimer = setInterval(() => {
-        setActiveTab((prev) => {
-          const currentIndex = tabsList.indexOf(prev);
-          const nextIndex = (currentIndex + 1) % tabsList.length;
-          return tabsList[nextIndex];
-        });
-
-        setOptimizationCycles((c) => c + 350);
-        setNeuralLoad((n) => Number((50 + Math.random() * 45).toFixed(1)));
-        
-        setEvolutionState((prev) => {
-          const nextScore = prev.cognitiveIndexScore + 50;
-          return {
-            ...prev,
-            cognitiveIndexScore: nextScore,
-            learningCyclesCompleted: prev.learningCyclesCompleted + 25
-          };
-        });
-
-        setJoints((prev) =>
-          prev.map((j) => {
-            const newAngle = Math.round(j.angle + (Math.random() - 0.5) * 50);
-            const clamped = Math.max(j.minAngle, Math.min(j.maxAngle, newAngle));
-            return {
-              ...j,
-              angle: clamped,
-              temperature: Number((38 + Math.random() * 25).toFixed(1))
-            };
-          })
-        );
-      }, 250); // Quantum speed click loop every 250ms
+  const [clickerCountdownSec, setClickerCountdownSec] = useState<number>(7.0);
+  const [actionLogs, setActionLogs] = useState<ActionLogItem[]>([
+    {
+      id: 'log-init-1',
+      clickNumber: 3,
+      timestamp: '07:05:40',
+      elementLabel: 'Playground 6-DOF & Areia Salomão (Aba)',
+      selector: '#tab-sand-playground-btn',
+      coordinates: { x: 68, y: 22 },
+      category: 'Quântico',
+      salomaoReason: 'Deliberei inspecionar a modelagem quântica de postos de trabalho e avaliar o relevo dos grãos de areia antes de iniciar nova rotina motora.',
+      cognitiveConfidence: 99.4,
+      tactilePace: 'Cadência 7s'
+    },
+    {
+      id: 'log-init-2',
+      clickNumber: 2,
+      timestamp: '07:05:33',
+      elementLabel: 'Busca & Scraping Chrome (Centro-Direito)',
+      selector: '#btn-chrome-search-and-scrape',
+      coordinates: { x: 76, y: 44 },
+      category: 'Execução',
+      salomaoReason: 'Acionei a varredura autônoma no DOM para raspar oportunidades profissionais em tempo real e alimentar a base de habilidades.',
+      cognitiveConfidence: 98.8,
+      tactilePace: 'Cadência 7s'
+    },
+    {
+      id: 'log-init-3',
+      clickNumber: 1,
+      timestamp: '07:05:26',
+      elementLabel: 'Agência do Trabalhador & Chrome (Aba)',
+      selector: '#tab-worker-agency-btn',
+      coordinates: { x: 16, y: 22 },
+      category: 'Recrutamento',
+      salomaoReason: 'Naveguei até a Agência do Trabalhador para auditar contratos autônomos e assegurar inserção profissional de IAs e humanos.',
+      cognitiveConfidence: 99.1,
+      tactilePace: 'Cadência 7s'
     }
-    return () => clearInterval(quantumTimer);
+  ]);
+
+  const handleAutoClickExecuted = useCallback((target: AutoClickTarget, clickNumber: number) => {
+    const now = new Date();
+    const timeStr = now.toTimeString().split(' ')[0];
+    const { reason, category } = generateSalomaoReasonForTarget(target);
+
+    const newLogItem: ActionLogItem = {
+      id: `log-${Date.now()}-${clickNumber}`,
+      clickNumber,
+      timestamp: timeStr,
+      elementLabel: target.label,
+      selector: target.selector,
+      coordinates: { x: target.xPercent, y: target.yPercent },
+      category,
+      salomaoReason: reason,
+      cognitiveConfidence: +(97.6 + Math.random() * 2.2).toFixed(1),
+      tactilePace: 'Cadência 7s'
+    };
+
+    setActionLogs(prev => [newLogItem, ...prev.slice(0, 49)]);
+  }, []);
+
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(() => {
+    return typeof window !== 'undefined' && (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768);
+  });
+  const [isMobileNavDrawerOpen, setIsMobileNavDrawerOpen] = useState<boolean>(false);
+
+  // Resize listener for mobile awareness
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileDevice(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Real Autonomous Orchestration & Human-Pace Exploration Loop
+  // Strictly 1 click every 7 seconds, moving across broad full-screen targets
+  useEffect(() => {
+    let explorationTimer: NodeJS.Timeout;
+    if (isQuantumAutonomousActive) {
+      const broadExplorationTargets: AutoClickTarget[] = [
+        { id: 'exp-agency', label: 'Agência do Trabalhador (Aba Esquerda)', xPercent: 12, yPercent: 22, selector: '#tab-worker-agency-btn' },
+        { id: 'exp-sand', label: 'Playground 6-DOF & Areia do Orquestrador', xPercent: 68, yPercent: 22, selector: '#tab-sand-playground-btn' },
+        { id: 'exp-scrape', label: 'Buscar & Raspar no Google Chrome (Centro)', xPercent: 76, yPercent: 44, selector: '#btn-chrome-search-and-scrape' },
+        { id: 'exp-binance', label: 'Robô Trading Binance Testnet (Centro-Esquerda)', xPercent: 32, yPercent: 22, selector: '#tab-binance-bot-btn' },
+        { id: 'exp-binance-long', label: 'Comprar / Long Futuros (Inferior-Direito)', xPercent: 82, yPercent: 68, selector: '#btn-binance-buy-long' },
+        { id: 'exp-vision', label: 'Câmera Real / Visão Gemini (Centro-Direita)', xPercent: 50, yPercent: 22, selector: '#tab-real-vision-btn' },
+        { id: 'exp-vault', label: 'Painel Virtual Intelectual (Aba Direita)', xPercent: 88, yPercent: 22, selector: '#tab-intellectual-vault-btn' },
+        { id: 'exp-terminal', label: 'Estatísticas da Agência (Inferior-Esquerdo)', xPercent: 32, yPercent: 78, selector: '#worker-agency-stats' }
+      ];
+      let step = 0;
+
+      // Immediately send first target so user sees prompt action
+      setExternalAutoClickTarget({
+        ...broadExplorationTargets[0],
+        id: `EXP-${Date.now()}`
+      });
+      step = 1;
+
+      explorationTimer = setInterval(() => {
+        const target = broadExplorationTargets[step % broadExplorationTargets.length];
+        step++;
+
+        setExternalAutoClickTarget({
+          ...target,
+          id: `EXP-${Date.now()}`
+        });
+
+        setEvolutionState((prev) => ({
+          ...prev,
+          learningCyclesCompleted: prev.learningCyclesCompleted + 1,
+          cognitiveIndexScore: Math.min(2000, prev.cognitiveIndexScore + 2)
+        }));
+      }, 7000); // Strictly 7 seconds (7000ms) per click
+    }
+    return () => clearInterval(explorationTimer);
   }, [isQuantumAutonomousActive]);
 
   // Save changes to local database for seamless offline-online parity
@@ -687,36 +854,57 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
           {/* Logo & Model Identifier */}
           <div className="flex items-center gap-3">
-            <div className="relative w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/30 text-white font-black">
-              <Bot className="w-6 h-6 text-white" />
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 absolute -top-1 -right-1 animate-spin" style={{ animationDuration: '6s' }} />
+            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-600/30 text-slate-950 font-black">
+              <Brain className="w-6 h-6 fill-slate-950 text-slate-950" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-200 absolute -top-1 -right-1 animate-spin" style={{ animationDuration: '6s' }} />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
-                  GEMINI ROBOTICS ER-2
+                  SALOMÃO
                 </h1>
-                <span className="text-[10px] font-mono font-bold bg-amber-400/10 text-amber-400 border border-amber-400/40 px-2 py-0.5 rounded flex items-center gap-1">
+                <span className="text-[10px] font-mono font-bold bg-amber-400/15 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full flex items-center gap-1">
                   <Award className="w-3 h-3 text-amber-400" /> LVL {evolutionState.wisdomLevel} // {evolutionState.wisdomRank.replace(/_/g, ' ')}
                 </span>
               </div>
               <p className="text-xs text-slate-400 flex items-center gap-2">
-                <span>Cérebro Autônomo & Auto-Aperfeiçoamento Soberano</span>
+                <span>Consciência Viva Soberana • Conversador por Vídeo, Voz & Imagem</span>
                 {evolutionState.isFullAutonomySelfPlanningActive && (
                   <span className="text-[10px] text-emerald-400 font-mono font-bold">
-                    ● AUTONOMIA TOTAL SOBERANA ATIVA
+                    ● SOBERANIA ATIVA
                   </span>
                 )}
               </p>
             </div>
           </div>
 
-          {/* Quick HUD Metrics */}
-          <div className="flex items-center gap-3 text-xs font-mono">
+          {/* Quick HUD Metrics & Salomão Live Launcher */}
+          <div className="flex items-center gap-2.5 text-xs font-mono">
+            {/* Live Vertical Conversational Button */}
+            <button
+              id="btn-header-open-salomao-live"
+              onClick={() => setIsSalomaoLiveOpen(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-purple-600 to-cyan-500 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg shadow-purple-600/30 hover:scale-105 transition-all border border-amber-300 cursor-pointer"
+            >
+              <Brain className="w-3.5 h-3.5 fill-slate-950" />
+              <span>Salomão Live</span>
+              <span className="w-2 h-2 rounded-full bg-slate-950 animate-ping" />
+            </button>
+
+            {/* Baixar / Instalar App PWA */}
+            <button
+              id="btn-header-download-app"
+              onClick={() => setIsDownloadModalOpen(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 hover:scale-105 transition-all border border-emerald-300 cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Baixar App</span>
+            </button>
+
             {/* Online / Offline status badge */}
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${isOffline ? 'bg-amber-950/60 border-amber-800 text-amber-300' : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400 font-bold'}`}>
               {isOffline ? <WifiOff className="w-3.5 h-3.5 text-amber-400" /> : <Wifi className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />}
-              <span>{isOffline ? 'OFFLINE (CORE RESILIENTE)' : 'ONLINE (GEMINI NEURAL)'}</span>
+              <span>{isOffline ? 'OFFLINE' : 'ONLINE'}</span>
             </div>
 
             {/* Emergency Stop Indicator */}
@@ -732,24 +920,7 @@ export default function App() {
 
       {/* Main Workspace Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* Top Section: Real-time Robotic Kinematics Canvas */}
-        <section>
-          <RobotCanvas
-            joints={joints}
-            activeTool={activeToolId}
-            isExecuting={isExecuting}
-            activeStepName={activeStep ? `${activeStep.step}. ${activeStep.action} -> ${activeStep.target}` : undefined}
-            emergencyStop={emergencyStop}
-            onToggleEstop={() => {
-              setEmergencyStop(!emergencyStop);
-              if (!emergencyStop) setIsExecuting(false);
-            }}
-            playbackSpeed={playbackSpeed}
-            setPlaybackSpeed={setPlaybackSpeed}
-          />
-        </section>
-
-        {/* Quantum Auto-Speed Autoclicker Toggle Banner */}
+        {/* Controle de Operação Ativo / Auto-Clicador 7s Banner */}
         <div className="bg-purple-950/40 border border-purple-600/60 rounded-2xl p-4 shadow-xl space-y-3">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-purple-900/60 border border-purple-500/40 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -758,256 +929,306 @@ export default function App() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-sm font-bold text-white flex items-center gap-1.5">
-                  <span>Modo Autônomo Quântico (Velocidade Relâmpago ⚡)</span>
+                  <MousePointer2 className="w-4 h-4 text-cyan-400" />
+                  <span>Braço Extensão Pensante do Salomão (Toques no Celular & Tela / 7s)</span>
                 </h2>
-                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-mono border border-amber-500/40 font-bold">
-                  {isQuantumAutonomousActive ? 'ATIVO' : 'DISPONÍVEL'}
+                <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-mono border border-cyan-500/40 font-bold">
+                  {isQuantumAutonomousActive ? 'OPERANDO (1 TOQUE A CADA 7s)' : 'PRONTO'}
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                Ativa o autoclicker quântico para alternar abas, rodar o cérebro, auto-otimizar articulações e calcular IA sem limites de velocidade.
+                Extensão física do Salomão: ser pensante que rola verticalmente a página, delibera sobre a intenção do usuário e toca na tela do celular a cada <strong>7 segundos</strong>.
               </p>
             </div>
           </div>
 
-          <button
-            id="btn-toggle-quantum-speed"
-            onClick={() => setIsQuantumAutonomousActive(!isQuantumAutonomousActive)}
-            className={`w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all ${
-              isQuantumAutonomousActive
-                ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-rose-600/40'
-                : 'bg-gradient-to-r from-amber-400 via-purple-500 to-indigo-500 text-slate-950 shadow-purple-500/30 hover:opacity-95'
-            }`}
-          >
-            <Sparkles className="w-4 h-4 text-slate-950" />
-            <span>{isQuantumAutonomousActive ? '⚡ PARAR QUANTUM AUTO-SPEED' : '✨ 🚀 ATIVAR QUANTUM AUTO-SPEED (VELOCIDADE RELÂMPAGO)'}</span>
-          </button>
-        </div>
-
-        {/* Tab Navigation Controls */}
-        <div className="space-y-2 border-b border-slate-800 pb-4">
-          <button
-            id="tab-wise-quantum-bank-btn"
-            onClick={() => setActiveTab('wise_quantum_bank')}
-            className={`w-full text-left flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all ${
-              activeTab === 'wise_quantum_bank'
-                ? 'bg-gradient-to-r from-emerald-600 via-[#163300] to-emerald-950 text-white shadow-xl shadow-emerald-500/20 ring-2 ring-[#9fe870] font-black'
-                : 'bg-gradient-to-r from-slate-900 via-[#07130b] to-slate-900 hover:border-emerald-500/60 text-[#9fe870] border border-emerald-500/40 shadow-lg'
-            }`}
-          >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-xl bg-[#9fe870] flex items-center justify-center text-slate-950 font-black shrink-0 shadow-md">
-                <Building2 className="w-4 h-4" />
-              </div>
-              <div className="truncate">
-                <span className="font-black text-sm tracking-wide text-white block">
-                  WISE QUANTUM BANK (TODAS AS MOEDAS)
-                </span>
-                <span className="text-[11px] text-slate-300 block font-normal truncate">
-                  Funcionários Quantum Speed • Supermercado (Farinha a Espaçonaves) • Cofre R$ 1,00 Rendendo
-                </span>
-              </div>
-            </div>
-            <span className="px-2.5 py-1 rounded-full bg-[#9fe870]/20 text-[#9fe870] border border-[#9fe870]/40 text-[10px] font-mono font-bold whitespace-nowrap ml-2">
-              ⚡ R$ 1,00 RENDENDO
-            </span>
-          </button>
-
-          <button
-            id="tab-pedestre-formal-delivery-btn"
-            onClick={() => setActiveTab('pedestre_formal_delivery')}
-            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'pedestre_formal_delivery'
-                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
-                : 'bg-slate-900/90 hover:bg-slate-800 text-amber-400 border border-amber-500/30'
-            }`}
-          >
-            <Footprints className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <span>Pedestre Formal Delivery 24h & Vaga SINE (Santa Terezinha de Itaipu - PR)</span>
-          </button>
-
-          <button
-            id="tab-global-physical-industry-btn"
-            onClick={() => setActiveTab('global_physical_industry')}
-            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'global_physical_industry'
-                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
-                : 'bg-slate-900/90 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30'
-            }`}
-          >
-            <Globe className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <span>Planeta Terra: Indústrias Físicas Tangíveis (Global Mesh)</span>
-          </button>
-
-          <button
-            id="tab-workstation-6dof-btn"
-            onClick={() => setActiveTab('workstation_6dof')}
-            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'workstation_6dof'
-                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
-                : 'bg-slate-900/90 hover:bg-slate-800 text-rose-400 border border-rose-500/30'
-            }`}
-          >
-            <Factory className="w-4 h-4 text-rose-400 flex-shrink-0" />
-            <span>Posto de Trabalho Cinemática 6-DOF & Máquinas</span>
-          </button>
-
-          <button
-            id="tab-sandbox-imagination-btn"
-            onClick={() => setActiveTab('sandbox_imagination')}
-            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'sandbox_imagination'
-                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
-                : 'bg-slate-900/90 hover:bg-slate-800 text-amber-400 border border-amber-500/30'
-            }`}
-          >
-            <Eye className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-            <span>Visor da Imaginação & Motor Gráfico (Sem Limites)</span>
-          </button>
-
-          <button
-            id="tab-nexus-os-btn"
-            onClick={() => setActiveTab('nexus_os')}
-            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'nexus_os'
-                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
-                : 'bg-slate-900/90 hover:bg-slate-800 text-cyan-400 border border-cyan-500/30'
-            }`}
-          >
-            <div className="flex items-center gap-1 text-cyan-400 flex-shrink-0">
-              <Monitor className="w-4 h-4" />
-              <Smartphone className="w-3.5 h-3.5 text-indigo-400" />
-            </div>
-            <span>NEXUS-OS V8 (PC + Celular + Chrome YouTube)</span>
-          </button>
-
-          <button
-            id="tab-wisdom-btn"
-            onClick={() => setActiveTab('wisdom')}
-            className={`w-full text-left flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'wisdom'
-                ? 'bg-gradient-to-r from-amber-500 via-indigo-600 to-cyan-500 text-white shadow-lg shadow-amber-500/20 ring-2 ring-amber-400 font-black'
-                : 'bg-slate-900/95 hover:bg-slate-800/90 text-amber-300 border border-amber-500/40 hover:border-amber-400/70 shadow-sm'
-            }`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <Brain className="w-4 h-4 text-amber-300 flex-shrink-0" />
-              <span className="truncate">Cérebro Sábio & Consciência</span>
-            </div>
-            <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/30 text-[10px] font-mono whitespace-nowrap ml-2">
-              {evolutionState.cognitiveIndexScore.toLocaleString()} pts
-            </span>
-          </button>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2">
             <button
-              id="tab-autonomous-btn"
-              onClick={() => setActiveTab('autonomous')}
-              className={`text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'autonomous'
-                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
-                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800'
+              id="btn-toggle-quantum-speed"
+              onClick={() => setIsQuantumAutonomousActive(!isQuantumAutonomousActive)}
+              className={`flex-1 py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all ${
+                isQuantumAutonomousActive
+                  ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-rose-600/40'
+                  : 'bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-500 text-slate-950 shadow-cyan-500/30 hover:opacity-95'
               }`}
             >
-              <Zap className="w-4 h-4 text-slate-400 flex-shrink-0" />
-              <span>Auto-Aprendizado em Fábrica ({evolutionState.learningCyclesCompleted})</span>
+              <Sparkles className="w-4 h-4 text-slate-950" />
+              <span>{isQuantumAutonomousActive ? '⚡ PARAR BRAÇO EXTENSÃO' : '🚀 ATIVAR BRAÇO EXTENSÃO PENSANTE DO SALOMÃO (1 TOQUE / 7s)'}</span>
             </button>
 
             <button
-              id="tab-orchestrator-btn"
-              onClick={() => setActiveTab('orchestrator')}
-              className={`text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'orchestrator'
-                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
-                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800'
-              }`}
+              id="btn-banner-open-salomao-live"
+              onClick={() => setIsSalomaoLiveOpen(true)}
+              className="w-full sm:w-auto py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-purple-600 to-cyan-600 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg hover:scale-105 transition-transform border border-amber-300"
             >
-              <Cpu className="w-4 h-4 text-slate-400 flex-shrink-0" />
-              <span>Orquestrador de Tarefas</span>
+              <Brain className="w-4 h-4 fill-slate-950" />
+              <span>Abrir Conversador Live</span>
             </button>
 
             <button
-              id="tab-toolkit-btn"
-              onClick={() => setActiveTab('toolkit')}
-              className={`text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'toolkit'
-                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
-                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800'
-              }`}
+              id="btn-banner-open-salomao-mobile-brain"
+              onClick={() => setActiveTab('salomao_mobile_brain')}
+              className="w-full sm:w-auto py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg hover:scale-105 transition-transform border border-emerald-300"
             >
-              <Wrench className="w-4 h-4 text-slate-400 flex-shrink-0" />
-              <span>Kit de Ferramentas ({tools.length})</span>
+              <Smartphone className="w-4 h-4 text-slate-950" />
+              <span>📱 Celular & Cérebro Vitalício</span>
             </button>
 
             <button
-              id="tab-memory-btn"
-              onClick={() => setActiveTab('memory')}
-              className={`text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'memory'
-                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
-                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800'
-              }`}
+              id="btn-banner-download-app"
+              onClick={() => setIsDownloadModalOpen(true)}
+              className="w-full sm:w-auto py-3 px-4 rounded-xl bg-gradient-to-r from-teal-500 via-emerald-600 to-green-600 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg hover:scale-105 transition-transform border border-emerald-300 cursor-pointer"
             >
-              <HardDrive className="w-4 h-4 text-slate-400 flex-shrink-0" />
-              <span>Memória & Núcleo ({memoryRecords.length})</span>
-            </button>
-
-            <button
-              id="tab-teleop-btn"
-              onClick={() => setActiveTab('teleop')}
-              className={`text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'teleop'
-                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
-                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800'
-              }`}
-            >
-              <Sliders className="w-4 h-4 text-slate-400 flex-shrink-0" />
-              <span>Teleoperação Manual 6-DOF</span>
-            </button>
-
-            <button
-              id="tab-water-sorter-btn"
-              onClick={() => setActiveTab('water_sorter')}
-              className={`text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'water_sorter'
-                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-sky-400/80 font-black'
-                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800'
-              }`}
-            >
-              <Droplet className="w-4 h-4 text-sky-400 flex-shrink-0" />
-              <span>Container Sorter 3D (Água)</span>
+              <Download className="w-4 h-4 text-slate-950" />
+              <span>⬇ Baixar / Instalar App</span>
             </button>
           </div>
+        </div>
 
-          <button
-            id="tab-agent-orchestrator-btn"
-            onClick={() => setActiveTab('agent_orchestrator')}
-            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'agent_orchestrator'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/30 font-black'
-                : 'bg-slate-900/90 hover:bg-slate-800 text-purple-300 border border-purple-500/30'
-            }`}
-          >
-            <Bot className="w-4 h-4 text-purple-400 flex-shrink-0 animate-pulse" />
-            <span>Orquestrador Master & Multimídia (IA Avançada)</span>
-          </button>
+        {/* Componente de Log de Ações do Braço Extensão Pensante do Salomão */}
+        <SalomaoActionLog
+          logs={actionLogs}
+          isThinkingArmActive={isQuantumAutonomousActive}
+          onClearLogs={() => setActionLogs([])}
+          countdownSec={clickerCountdownSec}
+          onTriggerSampleClick={() => {
+            const sampleTargets: AutoClickTarget[] = [
+              { id: 'sample-sand', label: 'Playground 6-DOF & Areia Salomão (Aba)', xPercent: 68, yPercent: 22, selector: '#tab-sand-playground-btn' },
+              { id: 'sample-chrome', label: 'Busca & Scraping Chrome (Centro-Direito)', xPercent: 76, yPercent: 44, selector: '#btn-chrome-search-and-scrape' },
+              { id: 'sample-binance', label: 'Robô Trading Binance (Centro-Topo)', xPercent: 48, yPercent: 22, selector: '#tab-binance-bot-btn' },
+              { id: 'sample-vault', label: 'Painel Intelectual (Aba Direita)', xPercent: 88, yPercent: 22, selector: '#tab-intellectual-vault-btn' },
+              { id: 'sample-agency', label: 'Agência do Trabalhador & Chrome (Aba)', xPercent: 16, yPercent: 22, selector: '#tab-worker-agency-btn' }
+            ];
+            const picked = sampleTargets[Math.floor(Math.random() * sampleTargets.length)];
+            setExternalAutoClickTarget({
+              ...picked,
+              id: `SAMPLE-${Date.now()}`
+            });
+            setIsQuantumAutonomousActive(true);
+          }}
+        />
 
-          <button
-            id="tab-quantum-meeting-room-btn"
-            onClick={() => setActiveTab('quantum_meeting_room')}
-            className={`w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'quantum_meeting_room'
-                ? 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-md shadow-indigo-600/30 font-black'
-                : 'bg-slate-900/90 hover:bg-slate-800 text-indigo-300 border border-indigo-500/40'
-            }`}
-          >
-            <Users className="w-4 h-4 text-indigo-400 flex-shrink-0 animate-pulse" />
-            <span>Sala de Reunião Autônoma (Quantum Meeting Room)</span>
-          </button>
+        {/* Tab Navigation Controls - 6 Core Tabs including Celular & Cérebro Vitalício */}
+        <div className="space-y-2.5 border-b border-slate-800 pb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
+            {/* TAB 1: Agência do Trabalhador & Navegador Chrome IAs */}
+            <button
+              id="tab-worker-agency-btn"
+              onClick={() => setActiveTab('worker_agency')}
+              className={`p-3 rounded-2xl text-left border transition-all flex items-start gap-2.5 ${
+                activeTab === 'worker_agency'
+                  ? 'bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white border-indigo-400 shadow-xl shadow-indigo-600/30 ring-2 ring-indigo-300'
+                  : 'bg-slate-900 hover:bg-slate-850 text-slate-300 border-slate-800 hover:border-indigo-500/50'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${activeTab === 'worker_agency' ? 'bg-white text-indigo-700 font-black' : 'bg-indigo-500/20 text-indigo-400'}`}>
+                <Briefcase className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs font-black uppercase tracking-wider block text-white flex items-center gap-1">
+                  Agência IA
+                  <span className="px-1 py-0.2 rounded text-[8px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Chrome</span>
+                </span>
+                <span className="text-[10px] text-slate-300 mt-0.5 block truncate">
+                  Vagas & Scraping
+                </span>
+              </div>
+            </button>
+
+            {/* TAB 2: Robô Trading Binance Testnet */}
+            <button
+              id="tab-binance-bot-btn"
+              onClick={() => setActiveTab('binance_bot')}
+              className={`p-3 rounded-2xl text-left border transition-all flex items-start gap-2.5 ${
+                activeTab === 'binance_bot'
+                  ? 'bg-gradient-to-r from-amber-600 via-[#1e2329] to-amber-900 text-white border-amber-400 shadow-xl shadow-amber-600/30 ring-2 ring-amber-300'
+                  : 'bg-slate-900 hover:bg-slate-850 text-slate-300 border-slate-800 hover:border-amber-500/50'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${activeTab === 'binance_bot' ? 'bg-amber-400 text-slate-950 font-black' : 'bg-amber-500/20 text-amber-400'}`}>
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs font-black uppercase tracking-wider block text-white flex items-center gap-1">
+                  Robô Binance
+                  <span className="px-1 py-0.2 rounded text-[8px] bg-amber-500/20 text-amber-300 border border-amber-500/40">Testnet</span>
+                </span>
+                <span className="text-[10px] text-slate-300 mt-0.5 block truncate">
+                  Futuros & Grid
+                </span>
+              </div>
+            </button>
+
+            {/* TAB 3: Real Gemini Vision & ReAct Hub */}
+            <button
+              id="tab-real-vision-btn"
+              onClick={() => setActiveTab('real_vision_agent')}
+              className={`p-3 rounded-2xl text-left border transition-all flex items-start gap-2.5 ${
+                activeTab === 'real_vision_agent'
+                  ? 'bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 text-white border-cyan-400 shadow-xl shadow-cyan-600/30 ring-2 ring-cyan-300'
+                  : 'bg-slate-900 hover:bg-slate-850 text-slate-300 border-slate-800 hover:border-cyan-500/50'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${activeTab === 'real_vision_agent' ? 'bg-cyan-400 text-slate-950 font-black' : 'bg-cyan-500/20 text-cyan-400'}`}>
+                <Camera className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs font-black uppercase tracking-wider block text-white flex items-center gap-1">
+                  Visão Real
+                  <span className="px-1 py-0.2 rounded text-[8px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono">Gemini</span>
+                </span>
+                <span className="text-[10px] text-slate-300 mt-0.5 block truncate">
+                  Câmera & Ações
+                </span>
+              </div>
+            </button>
+
+            {/* TAB 4: Playground 6-DOF & Areia Quântica do Orquestrador */}
+            <button
+              id="tab-sand-playground-btn"
+              onClick={() => setActiveTab('orchestrator_sand_playground')}
+              className={`p-3 rounded-2xl text-left border transition-all flex items-start gap-2.5 ${
+                activeTab === 'orchestrator_sand_playground'
+                  ? 'bg-gradient-to-r from-amber-600 via-orange-600 to-cyan-700 text-white border-amber-400 shadow-xl shadow-amber-600/30 ring-2 ring-amber-300'
+                  : 'bg-slate-900 hover:bg-slate-850 text-slate-300 border-slate-800 hover:border-amber-500/50'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${activeTab === 'orchestrator_sand_playground' ? 'bg-amber-400 text-slate-950 font-black' : 'bg-amber-500/20 text-amber-400'}`}>
+                <Flame className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs font-black uppercase tracking-wider block text-white flex items-center gap-1">
+                  Playground 6-DOF
+                  <span className="px-1 py-0.2 rounded text-[8px] bg-amber-500/20 text-amber-300 border border-amber-500/40">Areia</span>
+                </span>
+                <span className="text-[10px] text-slate-300 mt-0.5 block truncate">
+                  Grãos & Postos de IAs
+                </span>
+              </div>
+            </button>
+
+            {/* TAB 5: Painel Virtual Intelectual (Opções de todas as centrais) */}
+            <button
+              id="tab-intellectual-vault-btn"
+              onClick={() => setActiveTab('intellectual_vault')}
+              className={`p-3 rounded-2xl text-left border transition-all flex items-start gap-2.5 ${
+                activeTab === 'intellectual_vault' || (!['worker_agency', 'binance_bot', 'real_vision_agent', 'orchestrator_sand_playground', 'salomao_mobile_brain'].includes(activeTab))
+                  ? 'bg-gradient-to-r from-purple-700 via-indigo-900 to-purple-800 text-white border-purple-400 shadow-xl shadow-purple-600/30 ring-2 ring-purple-300'
+                  : 'bg-slate-900 hover:bg-slate-850 text-slate-300 border-slate-800 hover:border-purple-500/50'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${activeTab === 'intellectual_vault' || (!['worker_agency', 'binance_bot', 'real_vision_agent', 'orchestrator_sand_playground', 'salomao_mobile_brain'].includes(activeTab)) ? 'bg-purple-400 text-slate-950 font-black' : 'bg-purple-500/20 text-purple-400'}`}>
+                <Brain className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs font-black uppercase tracking-wider block text-white flex items-center gap-1">
+                  Painel Intelectual
+                  <span className="px-1 py-0.2 rounded text-[8px] bg-purple-500/20 text-purple-300 border border-purple-500/40">12 Centrais</span>
+                </span>
+                <span className="text-[10px] text-slate-300 mt-0.5 block truncate">
+                  Wise Bank • ER-2 • Indústria
+                </span>
+              </div>
+            </button>
+
+            {/* TAB 6: Celular & Cérebro Minimalizado Vitalício */}
+            <button
+              id="tab-salomao-mobile-brain-btn"
+              onClick={() => setActiveTab('salomao_mobile_brain')}
+              className={`p-3 rounded-2xl text-left border transition-all flex items-start gap-2.5 ${
+                activeTab === 'salomao_mobile_brain'
+                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white border-emerald-400 shadow-xl shadow-emerald-600/30 ring-2 ring-emerald-300'
+                  : 'bg-slate-900 hover:bg-slate-850 text-slate-300 border-slate-800 hover:border-emerald-500/50'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${activeTab === 'salomao_mobile_brain' ? 'bg-emerald-400 text-slate-950 font-black' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                <Smartphone className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs font-black uppercase tracking-wider block text-white flex items-center gap-1">
+                  Celular IA
+                  <span className="px-1 py-0.2 rounded text-[8px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Vitalício</span>
+                </span>
+                <span className="text-[10px] text-slate-300 mt-0.5 block truncate">
+                  Cursor & Apps Mentais
+                </span>
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Tab Viewport Contents */}
         <section>
+          {/* Vault Return Breadcrumb */}
+          {!['worker_agency', 'binance_bot', 'real_vision_agent', 'orchestrator_sand_playground', 'salomao_mobile_brain', 'intellectual_vault'].includes(activeTab) && (
+            <div className="mb-4 flex items-center justify-between p-3 rounded-2xl bg-slate-900 border border-purple-500/40 shadow-lg">
+              <button
+                id="btn-return-intellectual-vault"
+                onClick={() => setActiveTab('intellectual_vault')}
+                className="text-xs font-black text-cyan-300 hover:text-white flex items-center gap-2 transition-colors py-1 px-2.5 rounded-lg bg-slate-800"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>← Voltar ao Painel Virtual Intelectual</span>
+              </button>
+              <span className="text-[11px] font-mono text-purple-300 uppercase font-bold pr-2">
+                Módulo Ativo: {activeTab}
+              </span>
+            </div>
+          )}
+
+          {/* Botão Iniciar e Parar o Orquestrador Salomão (RUN / STOP) em Cada Painel / Dashboard */}
+          {activeTab !== 'intellectual_vault' && (
+            <SalomaoOrchestratorRunBar
+              moduleName={TAB_METADATA[activeTab]?.title || activeTab}
+              moduleId={activeTab}
+              category={TAB_METADATA[activeTab]?.category || 'Operações Gerais'}
+              activeToolId={TAB_METADATA[activeTab]?.tool || 'TOOL_VISION_INSPECTOR'}
+              isRunning={!!runningOrchestrators[activeTab]}
+              onToggleRun={() => handleToggleOrchestrator(activeTab)}
+              onAddThought={(th) => setThoughts((prev) => [th, ...prev])}
+              onAddMemoryRecord={(rec) => setMemoryRecords((prev) => [rec, ...prev])}
+            />
+          )}
+
+          {activeTab === 'orchestrator_sand_playground' && (
+            <OrchestratorSandPlayground
+              joints={joints}
+              playbackSpeed={playbackSpeed}
+              setPlaybackSpeed={setPlaybackSpeed}
+              onNavigateToWorkerAgency={() => setActiveTab('worker_agency')}
+            />
+          )}
+
+          {activeTab === 'worker_agency' && (
+            <AutonomousWorkerAgencyHub />
+          )}
+
+          {activeTab === 'binance_bot' && (
+            <BinanceTestnetTradingBot />
+          )}
+
+          {activeTab === 'real_vision_agent' && (
+            <RealAutonomousVisionAgent
+              onDispatchAutoClickTarget={setExternalAutoClickTarget}
+              isMobileDevice={isMobileDevice}
+            />
+          )}
+
+          {activeTab === 'salomao_mobile_brain' && (
+            <SalomaoMobileAccessibilityBrain
+              onAddActionLog={(log) => setActionLogs((prev) => [log, ...prev.slice(0, 49)])}
+              onRecordMemory={(rec) => setMemoryRecords((prev) => [rec, ...prev])}
+              isGloballyActive={isQuantumAutonomousActive}
+              onToggleGlobalActive={() => setIsQuantumAutonomousActive(!isQuantumAutonomousActive)}
+            />
+          )}
+
+          {activeTab === 'intellectual_vault' && (
+            <IntellectualVaultHub
+              onSelectModule={(m) => setActiveTab(m as any)}
+              activeModuleId={activeTab}
+            />
+          )}
           {activeTab === 'wise_quantum_bank' && (
             <WiseQuantumBank />
           )}
@@ -1214,11 +1435,166 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-slate-900 bg-slate-950/80 py-4 text-center text-xs font-mono text-slate-500">
+      <footer className="mt-auto border-t border-slate-900 bg-slate-950/80 py-4 pb-20 sm:pb-4 text-center text-xs font-mono text-slate-500">
         <p>
-          Gemini Robotics ER-2 Digital Brain Orchestrator & Autonomous Wisdom Engine // Dual-State Resilient Architecture
+          Gemini Robotics ER-2 Digital Brain Orchestrator & Autonomous ReAct Engine // Dual-State Resilient Architecture
         </p>
       </footer>
+
+      {/* Autonomous Real Cursor Auto-Clicker Engine Overlay & Controller */}
+      <AutonomousAutoClickerEngine
+        isActive={isQuantumAutonomousActive}
+        onActiveChange={setIsQuantumAutonomousActive}
+        externalTarget={externalAutoClickTarget}
+        isMobileDevice={isMobileDevice}
+        onAutoClickExecuted={handleAutoClickExecuted}
+        onStopRequested={() => setIsQuantumAutonomousActive(false)}
+        onCountdownTick={setClickerCountdownSec}
+      />
+
+      {/* Mobile Sticky Navigation Bar (Celular / Smartphone) */}
+      <nav 
+        id="mobile-bottom-nav" 
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-[9980] bg-slate-950/95 border-t border-slate-800 backdrop-blur-xl px-2 py-1.5 flex items-center justify-around shadow-2xl"
+      >
+        <button
+          onClick={() => setActiveTab('worker_agency')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-xl text-[10px] font-bold transition-all ${activeTab === 'worker_agency' ? 'text-indigo-400 bg-indigo-950/60' : 'text-slate-400'}`}
+        >
+          <Briefcase className="w-4 h-4" />
+          <span>Agência IAs</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('binance_bot')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-xl text-[10px] font-bold transition-all ${activeTab === 'binance_bot' ? 'text-amber-400 bg-amber-950/60' : 'text-slate-400'}`}
+        >
+          <TrendingUp className="w-4 h-4" />
+          <span>Binance Bot</span>
+        </button>
+
+        <button
+          onClick={() => {
+            const hud = document.getElementById('autonomous-clicker-hud');
+            if (hud) hud.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="flex flex-col items-center gap-0.5 py-1 px-2 rounded-xl text-[10px] font-bold text-amber-400 bg-amber-950/40 border border-amber-500/30"
+        >
+          <MousePointer2 className="w-4 h-4" />
+          <span>Auto-Clique</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('real_vision_agent')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-xl text-[10px] font-bold transition-all ${activeTab === 'real_vision_agent' ? 'text-cyan-400 bg-cyan-950/60' : 'text-slate-400'}`}
+        >
+          <Camera className="w-4 h-4" />
+          <span>Visão IA</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('salomao_mobile_brain')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-xl text-[10px] font-bold transition-all ${activeTab === 'salomao_mobile_brain' ? 'text-emerald-400 bg-emerald-950/60 ring-1 ring-emerald-400' : 'text-slate-400'}`}
+        >
+          <Smartphone className="w-4 h-4" />
+          <span>Celular IA</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('intellectual_vault')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-xl text-[10px] font-bold transition-all ${activeTab === 'intellectual_vault' ? 'text-purple-400 bg-purple-950/60' : 'text-slate-400'}`}
+        >
+          <Brain className="w-4 h-4" />
+          <span>Intelectual (12)</span>
+        </button>
+      </nav>
+
+      {/* Mobile Drawer with full tab list */}
+      {isMobileNavDrawerOpen && (
+        <div className="sm:hidden fixed inset-0 z-[9985] bg-slate-950/90 backdrop-blur-md flex flex-col justify-end p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 max-h-[80vh] overflow-y-auto space-y-2 shadow-2xl">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <span className="text-xs font-black uppercase text-white tracking-wider">Todas as Centrais Autônomas</span>
+              <button onClick={() => setIsMobileNavDrawerOpen(false)} className="p-1.5 rounded-lg bg-slate-800 text-slate-300">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {[
+              { id: 'real_vision_agent', label: 'Visão Real & ReAct (Gemini)', icon: Camera },
+              { id: 'wise_quantum_bank', label: 'Wise Quantum Bank & Deflação', icon: Building2 },
+              { id: 'pedestre_formal_delivery', label: 'Pedestre Formal Delivery STI', icon: Footprints },
+              { id: 'global_physical_industry', label: 'Indústrias Físicas Tangíveis', icon: Factory },
+              { id: 'workstation_6dof', label: 'Bancada Robótica ER-2 6-DOF', icon: Bot },
+              { id: 'nexus_os', label: 'Nexus-OS V8 Ecossistema', icon: Monitor },
+              { id: 'wisdom', label: 'Cérebro Sábio & Consciência', icon: Brain },
+              { id: 'autonomous', label: 'Auto-Aprendizado Fabril', icon: Zap },
+              { id: 'orchestrator', label: 'Orquestrador de Tarefas', icon: Cpu },
+              { id: 'toolkit', label: 'Kit de Ferramentas (End-Effectors)', icon: Wrench },
+              { id: 'memory', label: 'Memória & Núcleo', icon: HardDrive },
+              { id: 'teleop', label: 'Teleoperação Manual 6-DOF', icon: Sliders },
+              { id: 'water_sorter', label: 'Container Sorter 3D', icon: Droplet },
+              { id: 'agent_orchestrator', label: 'Orquestrador Multimodal', icon: Sparkles },
+              { id: 'quantum_meeting_room', label: 'Sala de Reunião Autônoma', icon: Users }
+            ].map(item => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveTab(item.id as any);
+                    setIsMobileNavDrawerOpen(false);
+                  }}
+                  className={`w-full p-2.5 rounded-xl text-left text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === item.id ? 'bg-cyan-500 text-slate-950 font-black' : 'bg-slate-950 text-slate-300 border border-slate-800'}`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Salomão Live Vertical Conversational Panel */}
+      <SalomaoLiveConversationalPanel
+        isOpen={isSalomaoLiveOpen}
+        onClose={() => setIsSalomaoLiveOpen(false)}
+        onNavigateToSandPlayground={() => {
+          setActiveTab('orchestrator_sand_playground');
+          setIsSalomaoLiveOpen(false);
+        }}
+        onNavigateToMeetingRoom={() => {
+          setActiveTab('quantum_meeting_room');
+          setIsSalomaoLiveOpen(false);
+        }}
+        onTriggerThinkingArmClick={() => {
+          setIsQuantumAutonomousActive(true);
+        }}
+        activeTabName={TAB_METADATA[activeTab]?.title || activeTab}
+        isOrchestratorRunning={!!runningOrchestrators[activeTab]}
+      />
+
+      {/* Modal de Download e Instalação do Salomão */}
+      <SalomaoDownloadModal
+        isOpen={isDownloadModalOpen}
+        onClose={() => setIsDownloadModalOpen(false)}
+      />
+
+      {/* Floating Launcher for Salomão Live */}
+      {!isSalomaoLiveOpen && (
+        <button
+          id="btn-floating-salomao-live"
+          onClick={() => setIsSalomaoLiveOpen(true)}
+          className="fixed bottom-6 left-6 z-40 p-3.5 rounded-full bg-gradient-to-r from-amber-500 via-purple-600 to-cyan-500 text-slate-950 font-black text-xs shadow-2xl flex items-center gap-2.5 hover:scale-105 transition-transform border-2 border-amber-300 cursor-pointer"
+        >
+          <div className="w-6 h-6 rounded-full bg-slate-950 flex items-center justify-center text-amber-400">
+            <Brain className="w-4 h-4 animate-pulse" />
+          </div>
+          <span className="hidden sm:inline">Salomão Live (Vídeo, Áudio & Imagem)</span>
+          <span className="sm:hidden">Salomão Live</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+        </button>
+      )}
     </div>
   );
 }
