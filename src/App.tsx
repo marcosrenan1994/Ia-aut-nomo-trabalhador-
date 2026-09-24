@@ -45,6 +45,7 @@ import { SalomaoLiveConversationalPanel } from './components/SalomaoLiveConversa
 import { SalomaoActionLog, ActionLogItem, generateSalomaoReasonForTarget } from './components/SalomaoActionLog';
 import { SalomaoMobileAccessibilityBrain } from './components/SalomaoMobileAccessibilityBrain';
 import { SalomaoDownloadModal } from './components/SalomaoDownloadModal';
+import { SalomaoWindowsAIPanel } from './components/SalomaoWindowsAIPanel';
 import { 
   Bot, 
   Cpu, 
@@ -63,6 +64,7 @@ import {
   Award,
   Monitor,
   Smartphone,
+  Laptop,
   Globe,
   Eye,
   Factory,
@@ -105,7 +107,8 @@ const TAB_METADATA: Record<string, { title: string; category: string; tool: Tool
   toolkit: { title: 'Gerenciador de Kit de Ferramentas', category: 'Atuadores e Sensores', tool: 'TOOL_WELDER' },
   memory: { title: 'Memória Vetorial & Computação', category: 'Bancos Vetoriais', tool: 'TOOL_SUCTION_CRANE' },
   teleop: { title: 'Teleoperação Manual 6-DOF', category: 'Controle de Articulações', tool: 'TOOL_DEBURRING' },
-  salomao_mobile_brain: { title: 'Salomão no Celular: Cérebro Vitalício & Cursor de Acessibilidade', category: 'Mobile & Acessibilidade', tool: 'TOOL_FASTENER' }
+  salomao_mobile_brain: { title: 'Salomão no Celular: Cérebro Vitalício & Cursor de Acessibilidade', category: 'Mobile & Acessibilidade', tool: 'TOOL_FASTENER' },
+  salomao_windows_ai: { title: 'Salomão IA • Windows Notebook & Base de Dados', category: 'Desktop & Inteligência Artificial', tool: 'TOOL_VISION_INSPECTOR' }
 };
 
 const INITIAL_JOINTS: JointState[] = [
@@ -234,11 +237,13 @@ export default function App() {
     | 'agent_orchestrator' 
     | 'quantum_meeting_room'
     | 'salomao_mobile_brain'
+    | 'salomao_windows_ai'
   >('worker_agency');
   const [isQuantumAutonomousActive, setIsQuantumAutonomousActive] = useState<boolean>(false);
   const [externalAutoClickTarget, setExternalAutoClickTarget] = useState<AutoClickTarget | null>(null);
   const [isSalomaoLiveOpen, setIsSalomaoLiveOpen] = useState<boolean>(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState<boolean>(false);
+  const [isWindowsAIPanelOpen, setIsWindowsAIPanelOpen] = useState<boolean>(false);
   const [runningOrchestrators, setRunningOrchestrators] = useState<Record<string, boolean>>({
     worker_agency: true,
     binance_bot: true,
@@ -975,6 +980,15 @@ export default function App() {
             </button>
 
             <button
+              id="btn-banner-windows-ai"
+              onClick={() => setActiveTab('salomao_windows_ai')}
+              className="w-full sm:w-auto py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg hover:scale-105 transition-transform border border-cyan-300 cursor-pointer"
+            >
+              <Laptop className="w-4 h-4 text-slate-950" />
+              <span>💻 IA Windows & Base de Dados</span>
+            </button>
+
+            <button
               id="btn-banner-download-app"
               onClick={() => setIsDownloadModalOpen(true)}
               className="w-full sm:w-auto py-3 px-4 rounded-xl bg-gradient-to-r from-teal-500 via-emerald-600 to-green-600 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg hover:scale-105 transition-transform border border-emerald-300 cursor-pointer"
@@ -1008,9 +1022,9 @@ export default function App() {
           }}
         />
 
-        {/* Tab Navigation Controls - 6 Core Tabs including Celular & Cérebro Vitalício */}
+        {/* Tab Navigation Controls - 7 Core Tabs including Windows IA & Celular */}
         <div className="space-y-2.5 border-b border-slate-800 pb-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2">
             {/* TAB 1: Agência do Trabalhador & Navegador Chrome IAs */}
             <button
               id="tab-worker-agency-btn"
@@ -1154,13 +1168,37 @@ export default function App() {
                 </span>
               </div>
             </button>
+
+            {/* TAB 7: Salomão IA & Base de Dados Windows Notebook */}
+            <button
+              id="tab-salomao-windows-ai-btn"
+              onClick={() => setActiveTab('salomao_windows_ai')}
+              className={`p-3 rounded-2xl text-left border transition-all flex items-start gap-2.5 ${
+                activeTab === 'salomao_windows_ai'
+                  ? 'bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-700 text-white border-cyan-400 shadow-xl shadow-cyan-600/30 ring-2 ring-cyan-300'
+                  : 'bg-slate-900 hover:bg-slate-850 text-slate-300 border-slate-800 hover:border-cyan-500/50'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${activeTab === 'salomao_windows_ai' ? 'bg-cyan-400 text-slate-950 font-black' : 'bg-cyan-500/20 text-cyan-400'}`}>
+                <Laptop className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs font-black uppercase tracking-wider block text-white flex items-center gap-1">
+                  IA Windows
+                  <span className="px-1 py-0.2 rounded text-[8px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">Base & PWA</span>
+                </span>
+                <span className="text-[10px] text-slate-300 mt-0.5 block truncate">
+                  Notebook & RAG
+                </span>
+              </div>
+            </button>
           </div>
         </div>
 
         {/* Tab Viewport Contents */}
         <section>
           {/* Vault Return Breadcrumb */}
-          {!['worker_agency', 'binance_bot', 'real_vision_agent', 'orchestrator_sand_playground', 'salomao_mobile_brain', 'intellectual_vault'].includes(activeTab) && (
+          {!['worker_agency', 'binance_bot', 'real_vision_agent', 'orchestrator_sand_playground', 'salomao_mobile_brain', 'salomao_windows_ai', 'intellectual_vault'].includes(activeTab) && (
             <div className="mb-4 flex items-center justify-between p-3 rounded-2xl bg-slate-900 border border-purple-500/40 shadow-lg">
               <button
                 id="btn-return-intellectual-vault"
@@ -1220,6 +1258,12 @@ export default function App() {
               onRecordMemory={(rec) => setMemoryRecords((prev) => [rec, ...prev])}
               isGloballyActive={isQuantumAutonomousActive}
               onToggleGlobalActive={() => setIsQuantumAutonomousActive(!isQuantumAutonomousActive)}
+            />
+          )}
+
+          {activeTab === 'salomao_windows_ai' && (
+            <SalomaoWindowsAIPanel
+              onNavigateToTab={(m) => setActiveTab(m as any)}
             />
           )}
 
@@ -1402,6 +1446,14 @@ export default function App() {
               activeToolId={activeToolId}
               onSelectTool={handleSelectTool}
               onCalibrateTool={handleCalibrateTool}
+              onUpdateTools={(updatedTools) => {
+                setTools(updatedTools);
+                try {
+                  localStorage.setItem('er2_tools', JSON.stringify(updatedTools));
+                } catch (e) {
+                  // ignore
+                }
+              }}
             />
           )}
 
@@ -1578,7 +1630,34 @@ export default function App() {
       <SalomaoDownloadModal
         isOpen={isDownloadModalOpen}
         onClose={() => setIsDownloadModalOpen(false)}
+        onOpenWindowsAIPanel={() => {
+          setIsDownloadModalOpen(false);
+          setActiveTab('salomao_windows_ai');
+        }}
       />
+
+      {/* Modal Separado de IA no Windows Notebook e Base de Dados se acionado */}
+      {isWindowsAIPanelOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4">
+          <div className="w-full max-w-5xl h-[92vh] relative flex flex-col">
+            <button
+              onClick={() => setIsWindowsAIPanelOpen(false)}
+              className="absolute top-4 right-4 z-50 p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              title="Fechar Painel Windows"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <SalomaoWindowsAIPanel
+              onClose={() => setIsWindowsAIPanelOpen(false)}
+              onNavigateToTab={(tab) => {
+                setActiveTab(tab as any);
+                setIsWindowsAIPanelOpen(false);
+              }}
+              isStandaloneModal={true}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Floating Launcher for Salomão Live */}
       {!isSalomaoLiveOpen && (

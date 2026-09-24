@@ -26,6 +26,8 @@ import {
   Play
 } from 'lucide-react';
 import { AutonomousThought, MemoryVectorRecord } from '../types';
+import { querySalomaoDatabaseAI } from '../data/salomaoKnowledgeBase';
+import { Laptop, Database } from 'lucide-react';
 
 interface SalomaoLiveConversationalPanelProps {
   isOpen: boolean;
@@ -242,7 +244,18 @@ export const SalomaoLiveConversationalPanel: React.FC<SalomaoLiveConversationalP
 
       const lower = text.toLowerCase();
 
-      if (lower.includes('pensando') || lower.includes('pensamento')) {
+      if (lower.includes('windows') || lower.includes('notebook') || lower.includes('pc') || lower.includes('computador') || lower.includes('desktop') || lower.includes('ollama')) {
+        reply = `Operando em modo Windows Notebook! Minha inteligência artificial tem acesso direto aos 51 vetores de memória, limites de carga dinâmica das ferramentas e dados do Wise Bank. Você pode me instalar como PWA nativo no Microsoft Edge ou Google Chrome (com atalho na Barra de Tarefas e offline vitalício), baixar a base completa em JSON ou copiar o prompt com RAG para rodar no Ollama / LM Studio.`;
+        imgTitle = 'Salomão IA em Modo Nativo Windows Notebook & PWA';
+        imgUrl = 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=80';
+        insight = 'Ambiente Windows: PWA indexado com cache offline e suporte a aceleração gráfica GPU.';
+      } else if (lower.includes('base') || lower.includes('dados') || lower.includes('carga') || lower.includes('peso') || lower.includes('torque') || lower.includes('gripper') || lower.includes('welder') || lower.includes('junta') || lower.includes('j1') || lower.includes('j2') || lower.includes('j3') || lower.includes('vetor') || lower.includes('memoria') || lower.includes('calibracao') || lower.includes('wise') || lower.includes('banco') || lower.includes('alimento') || lower.includes('industria') || lower.includes('tsmc') || lower.includes('embraer')) {
+        const ragResult = querySalomaoDatabaseAI(text);
+        reply = ragResult.answer;
+        imgTitle = `Base de Dados Salomão: ${ragResult.category}`;
+        imgUrl = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80';
+        insight = `Consulta RAG Concluída: ${ragResult.matchedRecords.length} registros da base consultados com integridade de 100%.`;
+      } else if (lower.includes('pensando') || lower.includes('pensamento')) {
         reply = `Estou no momento processando os tensores cinemáticos e alocando vetores de memória do módulo ${activeTabName}. Minha atenção está dividida entre a supervisão das ordens e a renderização das estações de trabalho em grãos de areia.`;
         imgTitle = 'Mapa Neural & Consciência Reflexiva do Salomão';
         imgUrl = 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=600&q=80';

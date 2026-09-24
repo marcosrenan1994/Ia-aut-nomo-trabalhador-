@@ -13,7 +13,22 @@ export const INITIAL_TOOLS: ToolDefinition[] = [
     precisionMm: 0.005,
     tempCelsius: 38.2,
     description: 'Pinça adaptativa servo-acionada com sensores de força piezoelétricos na ponta dos dedos.',
-    activeFeatures: ['Micro-torque feedback', 'Auto-centering', 'Pneumatic assist']
+    activeFeatures: ['Micro-torque feedback', 'Auto-centering', 'Pneumatic assist'],
+    dynamicLoadConfig: {
+      maxDynamicLoadKg: 15.0,
+      minDynamicLoadKg: 0.05,
+      ratedPayloadKg: 8.0,
+      currentMaterialWeightKg: 2.4,
+      materialType: 'ALUMINIO_7075',
+      materialDensityGcm3: 2.81,
+      autoTorqueCompensation: true,
+      torqueGainFactorNmPerKg: 3.8,
+      inertiaCompensationRatio: 85,
+      leverArmLengthMeters: 0.35,
+      dampingRatio: 0.92,
+      maxTorqueOffsetLimitNm: 55.0,
+      safetyEnvelopeStatus: 'OPTIMAL'
+    }
   },
   {
     id: 'TOOL_WELDER',
@@ -26,7 +41,22 @@ export const INITIAL_TOOLS: ToolDefinition[] = [
     precisionMm: 0.012,
     tempCelsius: 44.8,
     description: 'Módulo de soldagem por pulso laser contínuo com bocal de gás inerte e controle de costura em tempo real.',
-    activeFeatures: ['Laser seam tracking', 'Thermal beam shaping', 'Argon shielding monitor']
+    activeFeatures: ['Laser seam tracking', 'Thermal beam shaping', 'Argon shielding monitor'],
+    dynamicLoadConfig: {
+      maxDynamicLoadKg: 8.0,
+      minDynamicLoadKg: 0.1,
+      ratedPayloadKg: 5.0,
+      currentMaterialWeightKg: 1.8,
+      materialType: 'ACO_CARBONO',
+      materialDensityGcm3: 7.98,
+      autoTorqueCompensation: true,
+      torqueGainFactorNmPerKg: 4.2,
+      inertiaCompensationRatio: 90,
+      leverArmLengthMeters: 0.42,
+      dampingRatio: 0.95,
+      maxTorqueOffsetLimitNm: 40.0,
+      safetyEnvelopeStatus: 'OPTIMAL'
+    }
   },
   {
     id: 'TOOL_VISION_INSPECTOR',
@@ -39,7 +69,22 @@ export const INITIAL_TOOLS: ToolDefinition[] = [
     precisionMm: 0.001,
     tempCelsius: 35.0,
     description: 'Scanner estéreo confocal de alta taxa de quadros para inspeção micrométrica e nuvem de pontos.',
-    activeFeatures: ['Sub-millimeter pointcloud', 'Defect classification', 'Surface reflectivity map']
+    activeFeatures: ['Sub-millimeter pointcloud', 'Defect classification', 'Surface reflectivity map'],
+    dynamicLoadConfig: {
+      maxDynamicLoadKg: 4.0,
+      minDynamicLoadKg: 0.01,
+      ratedPayloadKg: 2.5,
+      currentMaterialWeightKg: 0.35,
+      materialType: 'VIDRO_QUARTZO',
+      materialDensityGcm3: 2.20,
+      autoTorqueCompensation: true,
+      torqueGainFactorNmPerKg: 2.1,
+      inertiaCompensationRatio: 95,
+      leverArmLengthMeters: 0.28,
+      dampingRatio: 0.99,
+      maxTorqueOffsetLimitNm: 20.0,
+      safetyEnvelopeStatus: 'OPTIMAL'
+    }
   },
   {
     id: 'TOOL_FASTENER',
@@ -53,7 +98,22 @@ export const INITIAL_TOOLS: ToolDefinition[] = [
     precisionMm: 0.02,
     tempCelsius: 39.5,
     description: 'Ferramenta de torque programável com desaceleração dinâmica e registro de curvas de assentamento.',
-    activeFeatures: ['Torque angle verification', 'Fastener thread sync', 'Anti-strip limiter']
+    activeFeatures: ['Torque angle verification', 'Fastener thread sync', 'Anti-strip limiter'],
+    dynamicLoadConfig: {
+      maxDynamicLoadKg: 25.0,
+      minDynamicLoadKg: 0.2,
+      ratedPayloadKg: 16.0,
+      currentMaterialWeightKg: 6.5,
+      materialType: 'TITANIO_GR5',
+      materialDensityGcm3: 4.43,
+      autoTorqueCompensation: true,
+      torqueGainFactorNmPerKg: 5.5,
+      inertiaCompensationRatio: 80,
+      leverArmLengthMeters: 0.38,
+      dampingRatio: 0.88,
+      maxTorqueOffsetLimitNm: 135.0,
+      safetyEnvelopeStatus: 'OPTIMAL'
+    }
   },
   {
     id: 'TOOL_SUCTION_CRANE',
@@ -66,7 +126,22 @@ export const INITIAL_TOOLS: ToolDefinition[] = [
     precisionMm: 0.05,
     tempCelsius: 32.1,
     description: 'Ventosa multicanal de sucção rápida projetada para chapas metálicas, painéis e caixas pesadas.',
-    activeFeatures: ['Vacuum seal telemetry', 'Emergency drop lock', 'Variable suction zones']
+    activeFeatures: ['Vacuum seal telemetry', 'Emergency drop lock', 'Variable suction zones'],
+    dynamicLoadConfig: {
+      maxDynamicLoadKg: 45.0,
+      minDynamicLoadKg: 0.5,
+      ratedPayloadKg: 30.0,
+      currentMaterialWeightKg: 14.2,
+      materialType: 'ACO_CARBONO',
+      materialDensityGcm3: 7.98,
+      autoTorqueCompensation: true,
+      torqueGainFactorNmPerKg: 6.8,
+      inertiaCompensationRatio: 75,
+      leverArmLengthMeters: 0.52,
+      dampingRatio: 0.85,
+      maxTorqueOffsetLimitNm: 180.0,
+      safetyEnvelopeStatus: 'OPTIMAL'
+    }
   },
   {
     id: 'TOOL_DISPENSER',
@@ -79,7 +154,22 @@ export const INITIAL_TOOLS: ToolDefinition[] = [
     precisionMm: 0.002,
     tempCelsius: 28.4,
     description: 'Bocal volumétrico de alta viscosidade para dosagem de selantes anaeróbicos e adesivos térmicos.',
-    activeFeatures: ['Volumetric flow control', 'Anti-drip valve', 'Viscosity compensation']
+    activeFeatures: ['Volumetric flow control', 'Anti-drip valve', 'Viscosity compensation'],
+    dynamicLoadConfig: {
+      maxDynamicLoadKg: 6.0,
+      minDynamicLoadKg: 0.05,
+      ratedPayloadKg: 3.5,
+      currentMaterialWeightKg: 1.15,
+      materialType: 'POLIMERO_UHMW',
+      materialDensityGcm3: 1.30,
+      autoTorqueCompensation: true,
+      torqueGainFactorNmPerKg: 2.9,
+      inertiaCompensationRatio: 92,
+      leverArmLengthMeters: 0.30,
+      dampingRatio: 0.94,
+      maxTorqueOffsetLimitNm: 30.0,
+      safetyEnvelopeStatus: 'OPTIMAL'
+    }
   },
   {
     id: 'TOOL_DEBURRING',
@@ -92,7 +182,22 @@ export const INITIAL_TOOLS: ToolDefinition[] = [
     precisionMm: 0.01,
     tempCelsius: 36.2,
     description: 'Cabeçote de desbaste orbital com compensação de força radial para acabamento de juntas fundidas.',
-    activeFeatures: ['Force compliance 5-DOF', 'Rotational speed feedback', 'Dust extraction']
+    activeFeatures: ['Force compliance 5-DOF', 'Rotational speed feedback', 'Dust extraction'],
+    dynamicLoadConfig: {
+      maxDynamicLoadKg: 18.0,
+      minDynamicLoadKg: 0.1,
+      ratedPayloadKg: 10.0,
+      currentMaterialWeightKg: 3.9,
+      materialType: 'AREIA_FUNDICAO',
+      materialDensityGcm3: 1.60,
+      autoTorqueCompensation: true,
+      torqueGainFactorNmPerKg: 4.6,
+      inertiaCompensationRatio: 88,
+      leverArmLengthMeters: 0.40,
+      dampingRatio: 0.90,
+      maxTorqueOffsetLimitNm: 85.0,
+      safetyEnvelopeStatus: 'OPTIMAL'
+    }
   }
 ];
 

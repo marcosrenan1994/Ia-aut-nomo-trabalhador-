@@ -7,6 +7,35 @@ export type ToolId =
   | 'TOOL_DISPENSER'
   | 'TOOL_DEBURRING';
 
+export type ProcessedMaterialType = 
+  | 'ACO_CARBONO'
+  | 'ALUMINIO_7075'
+  | 'TITANIO_GR5'
+  | 'FIBRA_CARBONO'
+  | 'POLIMERO_UHMW'
+  | 'AREIA_FUNDICAO'
+  | 'VIDRO_QUARTZO'
+  | 'COBRE_ELETROLITICO'
+  | 'PERSONALIZADO';
+
+export interface DynamicLoadConfig {
+  maxDynamicLoadKg: number; // Limite Máximo de Carga Dinâmica (W_max)
+  minDynamicLoadKg: number; // Limite Mínimo de Carga Dinâmica (W_min)
+  ratedPayloadKg: number; // Carga Nominal Recomendada
+  currentMaterialWeightKg: number; // Peso do material sendo processado atualmente
+  materialType: ProcessedMaterialType;
+  materialCustomName?: string;
+  materialDensityGcm3: number; // Densidade em g/cm³
+  autoTorqueCompensation: boolean; // Compensação automática ativada/desativada
+  torqueGainFactorNmPerKg: number; // Coeficiente de compensação dinâmica (Nm por kg)
+  inertiaCompensationRatio: number; // Coeficiente de compensação de inércia angular (0-100%)
+  leverArmLengthMeters: number; // Braço de alavanca efetivo do TCP (m)
+  dampingRatio: number; // Fator de amortecimento
+  maxTorqueOffsetLimitNm: number; // Limite de corte de segurança de torque adicional (Nm)
+  safetyEnvelopeStatus: 'OPTIMAL' | 'MODERATE' | 'NEAR_LIMIT' | 'OVERLOAD_PREVENTED';
+  lastAutoAdjustmentTimestamp?: string;
+}
+
 export interface ToolDefinition {
   id: ToolId;
   name: string;
@@ -20,6 +49,7 @@ export interface ToolDefinition {
   tempCelsius: number;
   description: string;
   activeFeatures: string[];
+  dynamicLoadConfig?: DynamicLoadConfig;
 }
 
 export interface OrchestrationStep {
